@@ -13,11 +13,11 @@ import  shutil
 import  datetime
 
 class BackupError(Exception):
-  pass
+    """@brief An excption raised during the backup process."""
+    pass
 
 class UO(object):
-    """@brief responsible for user viewable output
-       @param storeLogRam If True store log in ram as well as the file (default=False)"""
+    """@brief responsible for user viewable output."""
     def __init__(self):
         self._logFile = None
         self._outputStore = []
@@ -41,7 +41,7 @@ class UO(object):
                     fd = open(self._logFile, "w")
 
                 timeStamp = time.strftime("%Y-%b-%d_%H_%M_%S", time.gmtime())
-                fd.write("%s: %s\n" % (timeStamp, text))
+                fd.write("{}: {}\n".format(timeStamp, text))
             finally:
                 if fd:
                     fd.close()
@@ -102,7 +102,7 @@ class Backup(object):
     NOT_STARTED_BACKUP_SUFFIX       = "not_started"
 
     def __init__(self, uo, options):
-        """@brief Constructor for Backup object
+        """@brief Constructor
            @param uo = User output object for notifying user of progress
            @param options = Command line options
            """
@@ -127,7 +127,7 @@ class Backup(object):
 
         #If the src path exists but does not end /. / at the end of the path ensures we copy the dir contents
         if  os.path.isdir(self._options.src) and not self._options.src.endswith("/"):
-            self._options.src="%s/" % (self._options.src)
+            self._options.src="{}/".format(self._options.src)
 
         if self._options.dest == None:
             raise BackupError("Please define the dest path on the command line.")
@@ -141,7 +141,7 @@ class Backup(object):
         #Ensure local dest path exists
         if not os.path.isdir(self._options.dest):
             if self._options.disable_create_dest:
-                raise BackupError("%s path does not exist." % (self._options.dest) )
+                raise BackupError("{} path does not exist.".format(self._options.dest) )
             else:
                 self._createDestPath()
 
@@ -155,47 +155,47 @@ class Backup(object):
             raise BackupError("If the email list is defined then you must define the email server")
 
     def showCmdLine(self):
-        """@brief show the command line. Usfull when the user loaded the cmd line options from a file and
+        """@brief show the command line. Useful when the user loaded the cmd line options from a file and
            needs to know the original command line"""
 
         optionList = []
 
-        optionList.append( "--src  %s" % (self._options.src) )
+        optionList.append( "--src  {}".format(self._options.src) )
 
-        optionList.append( "--dest %s" % (self._options.dest) )
+        optionList.append( "--dest {}".format(self._options.dest) )
 
         if self._options.src_exclude:
-            optionList.append( "--src_exclude %s" % (self._options.src_exclude) )
+            optionList.append( "--src_exclude {}".format(self._options.src_exclude) )
 
         if self._options.log:
-            optionList.append( "--log %s" % (self._options.log) )
+            optionList.append( "--log {}".format(self._options.log) )
 
         if self._options.max_full:
-            optionList.append( "--max_full %s" % (self._options.max_full) )
+            optionList.append( "--max_full {}".format(self._options.max_full) )
 
         if self._options.max_inc:
-            optionList.append( "--max_inc %s" % (self._options.max_inc) )
+            optionList.append( "--max_inc {}".format(self._options.max_inc) )
 
         if self._options.email_list:
-            optionList.append( "--email_list %s" % (self._options.email_list) )
+            optionList.append( "--email_list {}".format(self._options.email_list) )
 
         if self._options.email_server:
-            optionList.append( "--email_server %s" % (self._options.email_server) )
+            optionList.append( "--email_server {}".format(self._options.email_server) )
 
         if self._options.email_username:
-            optionList.append( "--email_username %s" % (self._options.email_username) )
+            optionList.append( "--email_username {}".format(self._options.email_username) )
 
         if self._options.email_password:
-            optionList.append( "--email_password %s" % (self._options.email_password) )
+            optionList.append( "--email_password {}".format(self._options.email_password) )
 
         if self._options.pre_script:
-            optionList.append( "--pre_script %s" % (self._options.pre_script) )
+            optionList.append( "--pre_script {}".format(self._options.pre_script) )
 
         if self._options.post_script:
-            optionList.append( "--post_script %s" % (self._options.post_script) )
+            optionList.append( "--post_script {}".format(self._options.post_script) )
 
         if self._options.debug:
-            optionList.append( "--debug %s" % (self._options.debug) )
+            optionList.append( "--debug {}".format(self._options.debug) )
 
         self._uo.info("Previous command line")
         print(" ".join(optionList))
@@ -209,7 +209,7 @@ class Backup(object):
 
             if not os.path.isdir(self._options.dest):
 
-                raise BackupError("Failed to create dest path: %s" % (self._options.dest) )
+                raise BackupError("Failed to create dest path: {}".format(self._options.dest) )
 
     def _notifyEmail(self, subjectMessage, body=""):
         """@brief Responsible for notifying the user of the backup progress via email
@@ -217,7 +217,7 @@ class Backup(object):
            @param body The body text of the notification email"""
         backupSrc, _ = self._getSrc()
 
-        subject = "%s: '%s' %s" % (socket.gethostname(), backupSrc , subjectMessage)
+        subject = "{}: '{}' {}".format(socket.gethostname(), backupSrc , subjectMessage)
         if self._options.email_server:
             toList = self._options.email_list.split(",")
             self._sendMail( self._options.email_server, self._options.email_username, self._options.email_password, toList, subject, body)
@@ -227,7 +227,7 @@ class Backup(object):
            @return The full backup ID or -1 if not found"""
         fullNum = -1
 
-        fullBackupSubStr = ".%s" % (Backup.FULL_BACKUP_DIR_TEXT)
+        fullBackupSubStr = ".{}".format(Backup.FULL_BACKUP_DIR_TEXT)
 
         pos = backupDest.find(fullBackupSubStr)
 
@@ -240,7 +240,7 @@ class Backup(object):
                 fullNum = int(elems[1])
 
             except ValueError:
-                raise BackupError("Failed to extract the full backup number from %s" % (backupDest) )
+                raise BackupError("Failed to extract the full backup number from {}".format(backupDest) )
 
         return fullNum
 
@@ -256,7 +256,7 @@ class Backup(object):
 
         for entry in entryList:
             #Get the last full complete backup
-            if entry.find(".%s" % (Backup.FULL_BACKUP_DIR_TEXT) ) != -1 and entry.find(Backup.INCOMPLETE_BACKUP_SUFFIX) == -1:
+            if entry.find(".{}".format(Backup.FULL_BACKUP_DIR_TEXT) ) != -1 and entry.find(Backup.INCOMPLETE_BACKUP_SUFFIX) == -1:
 
                 thisFullBackupID = self._getFullBackupID(entry)
 
@@ -284,7 +284,7 @@ class Backup(object):
         for entry in entryList:
 
             #If this is the correct full backup and we have found an incremental backup
-            if entry.find(".%s_%d" % (Backup.FULL_BACKUP_DIR_TEXT, fullBackupID)) != -1 and entry.find(Backup.INCREMENTAL_BACKUP_DIR_TEXT) != -1:
+            if entry.find(".{}_{}".format(Backup.FULL_BACKUP_DIR_TEXT, fullBackupID)) != -1 and entry.find(Backup.INCREMENTAL_BACKUP_DIR_TEXT) != -1:
                 incrBackupList.append(entry)
 
         return incrBackupList
@@ -296,7 +296,7 @@ class Backup(object):
 
         #If this incremental backup completed
         if backupDest.find(Backup.INCOMPLETE_BACKUP_SUFFIX) == -1:
-            incrBackupSubStr = "_%s" % (Backup.INCREMENTAL_BACKUP_DIR_TEXT)
+            incrBackupSubStr = "_{}".format(Backup.INCREMENTAL_BACKUP_DIR_TEXT)
 
             pos = backupDest.find(incrBackupSubStr)
 
@@ -309,7 +309,7 @@ class Backup(object):
                     incrNum = int(elems[1])
 
                 except ValueError:
-                    raise BackupError("Failed to extract the incremental backup number from %s" % (backupDest) )
+                    raise BackupError("Failed to extract the incremental backup number from {}".format(backupDest) )
 
         return incrNum
 
@@ -342,13 +342,13 @@ class Backup(object):
     def _getFullBackupDest(self, fullBackupID):
         """@brief get the full backup destination path"""
         timeStamp = time.strftime("%Y-%b-%d_%H_%M_%S", time.gmtime())
-        backupDest = os.path.join(self._options.dest, "%s.%s_%d" % (timeStamp, Backup.FULL_BACKUP_DIR_TEXT, fullBackupID) )
+        backupDest = os.path.join(self._options.dest, "{}.{}_{}".format(timeStamp, Backup.FULL_BACKUP_DIR_TEXT, fullBackupID) )
         return backupDest
 
     def _getIncrBackupDest(self, fullBackupID, incrBackupID):
         """@brief get the full backup destination path"""
         timeStamp = time.strftime("%Y-%b-%d_%H_%M_%S", time.gmtime())
-        backupDest = os.path.join(self._options.dest, "%s.%s_%d_%s_%d" % (timeStamp, Backup.FULL_BACKUP_DIR_TEXT, fullBackupID, Backup.INCREMENTAL_BACKUP_DIR_TEXT, incrBackupID) )
+        backupDest = os.path.join(self._options.dest, "{}.{}_{}_{}_{}".format(timeStamp, Backup.FULL_BACKUP_DIR_TEXT, fullBackupID, Backup.INCREMENTAL_BACKUP_DIR_TEXT, incrBackupID) )
         return backupDest
 
     def _sendMail(self, server, username, password, toList, subject, body):
@@ -363,8 +363,8 @@ class Backup(object):
         """
 
         # Prepare actual message
-        message = """\From: %s\nTo: %s\nSubject: %s\n\n%s
-        """ % (username, ", ".join(toList), subject, body)
+        message = """\From: {}\nTo: {}\nSubject: {}\n\n{}
+        """.format(username, ", ".join(toList), subject, body)
         try:
             port = 587
             if server.find(":") != -1:
@@ -379,9 +379,9 @@ class Backup(object):
                 server.login(username, password)
             server.sendmail(username, toList, message)
             server.close()
-            self._uo.info("SUBJECT: %s" % ( subject ) )
-            self._uo.info("BODY:    %s" % ( body ) )
-            self._uo.info("Sent email to %s as backup status notification" % ( str(toList) ) )
+            self._uo.info("SUBJECT: {}".format( subject ) )
+            self._uo.info("BODY:    {}".format( body ) )
+            self._uo.info("Sent email to {} as backup status notification".format( str(toList) ) )
         except Exception as e:
             #We dont throw an error here or any error send email notifications could
             #break the backup process
@@ -448,16 +448,16 @@ class Backup(object):
         """@brief Rename all backups to have a full backup ID one lower than their current full backup ID"""
         entryList = os.listdir(self._options.dest)
         for entry in entryList:
-            fullBackupIDText = "%s_%d" % (Backup.FULL_BACKUP_DIR_TEXT, fullBackupID)
-            newFullBackupIDText = "%s_%d" % (Backup.FULL_BACKUP_DIR_TEXT, fullBackupID-1)
+            fullBackupIDText = "{}_{}".format(Backup.FULL_BACKUP_DIR_TEXT, fullBackupID)
+            newFullBackupIDText = "{}_{}".format(Backup.FULL_BACKUP_DIR_TEXT, fullBackupID-1)
             if entry.find(fullBackupIDText) != -1:
                 currentPath = os.path.join(self._options.dest, entry)
                 newPath     = os.path.join(self._options.dest, entry)
                 newPath     = newPath.replace(fullBackupIDText, newFullBackupIDText)
-                cmd = "mv %s %s" % (currentPath, newPath)
+                cmd = "mv {} {}".format(currentPath, newPath)
                 cmdOutput = check_output(cmd, shell=True, stderr=STDOUT)
                 self._uo.info(cmdOutput)
-                self._uo.info("Renamed %s as %s" % (currentPath, newPath) )
+                self._uo.info("Renamed {} as {}".format(currentPath, newPath) )
 
     def _getFullBackupCount(self):
         """@brief Get the number of full backups currently stored in the dest location"""
@@ -467,7 +467,7 @@ class Backup(object):
         entryList = os.listdir(self._options.dest)
         for entry in entryList:
             #If this is a full backup path
-            if entry.find(".%s_" % (Backup.FULL_BACKUP_DIR_TEXT) ) != -1 and entry.find("_%s_" % (Backup.INCREMENTAL_BACKUP_DIR_TEXT) ) == -1:
+            if entry.find(".{}_".format(Backup.FULL_BACKUP_DIR_TEXT) ) != -1 and entry.find("_{}_".format(Backup.INCREMENTAL_BACKUP_DIR_TEXT) ) == -1:
                 fullBackupCount=fullBackupCount+1
 
         return fullBackupCount
@@ -480,7 +480,7 @@ class Backup(object):
         entryList = os.listdir(self._options.dest)
         for entry in entryList:
 
-            if entry.find(".%s_" % (Backup.FULL_BACKUP_DIR_TEXT) ) != -1:
+            if entry.find(".{}_".format(Backup.FULL_BACKUP_DIR_TEXT) ) != -1:
                 fullBackupList.append(entry)
 
         fullBackupList.sort()
@@ -503,12 +503,12 @@ class Backup(object):
 
             #Delete all backups that reference this full backup ID
             for backup in backupList:
-                if backup.find(".%s_%d" % (Backup.FULL_BACKUP_DIR_TEXT, oldestBackupID)) != -1:
+                if backup.find(".{}_{}".format(Backup.FULL_BACKUP_DIR_TEXT, oldestBackupID)) != -1:
                     delPath = os.path.join(self._options.dest, backup)
-                    cmd = "rm -rf %s" % (delPath)
+                    cmd = "rm -rf {}".format(delPath)
                     cmdOutput = check_output(cmd, shell=True, stderr=STDOUT)
                     self._uo.info(cmdOutput)
-                    self._uo.info("Removed %s" % (delPath) )
+                    self._uo.info("Removed {}".format(delPath) )
 
     def _getFullBackupPath(self, backupPath):
         """@brief Get the full backup path associated with this backup path.
@@ -518,9 +518,9 @@ class Backup(object):
            @return The Full backup path"""
 
         #If backupPath is a full backup path
-        fullBackupIDPos = backupPath.find(".%s_" % (Backup.FULL_BACKUP_DIR_TEXT) )
+        fullBackupIDPos = backupPath.find(".{}_".format(Backup.FULL_BACKUP_DIR_TEXT) )
 
-        if fullBackupIDPos != -1 and backupPath.find("_%s_" % (Backup.INCREMENTAL_BACKUP_DIR_TEXT)) == -1:
+        if fullBackupIDPos != -1 and backupPath.find("_{}_".format(Backup.INCREMENTAL_BACKUP_DIR_TEXT)) == -1:
             return backupPath
 
         #Extract the full backup ID
@@ -530,15 +530,15 @@ class Backup(object):
             try:
                 fullBackupID = int(fullBackupIDStr)
             except:
-                raise BackupError("%s is not a valid full backup ID extracted from %s" % (fullBackupIDStr, backupPath) )
+                raise BackupError("{} is not a valid full backup ID extracted from {}".format(fullBackupIDStr, backupPath) )
 
             entryList = os.listdir(self._options.dest)
             for entry in entryList:
-                if entry.endswith("%s_%d" % (Backup.FULL_BACKUP_DIR_TEXT, fullBackupID) ):
+                if entry.endswith("{}_{}".format(Backup.FULL_BACKUP_DIR_TEXT, fullBackupID) ):
                     return os.path.join(self._options.dest, entry)
 
         else:
-            raise BackupError("%s is not a valid backup path" % (backupPath) )
+            raise BackupError("{} is not a valid backup path".format(backupPath) )
 
     def _getLastBackupPath(self, backupDest):
         """@brief Get the path of the last backup"""
@@ -547,19 +547,19 @@ class Backup(object):
         lastFullBackup = self._getFullBackupPath(backupDest)
 
         #Check if the last backup we had was a full backup
-        pos = backupDest.find("_%s_" % (Backup.INCREMENTAL_BACKUP_DIR_TEXT) )
+        pos = backupDest.find("_{}_".format(Backup.INCREMENTAL_BACKUP_DIR_TEXT) )
 
         if pos == -1:
 
             #If this is a full backup path
-            if backupDest.find(".%s_" % (Backup.FULL_BACKUP_DIR_TEXT) ) != -1:
+            if backupDest.find(".{}_".format(Backup.FULL_BACKUP_DIR_TEXT) ) != -1:
 
                 #If so then return this backup
                 return lastFullBackup
 
             else:
 
-                raise BackupError("%s is not a full or incremental backup path ???" % (backupDest) )
+                raise BackupError("{} is not a full or incremental backup path ???".format(backupDest) )
 
         #Extract the incremental backup number
         incNumStr = backupDest[pos+6:]
@@ -570,7 +570,7 @@ class Backup(object):
             incNum = int(incNumStr)
 
         except ValueError:
-            raise BackupError("Failed to extract the incremental backup number from %s" % (backupDest) )
+            raise BackupError("Failed to extract the incremental backup number from {}".format(backupDest) )
 
         if incNum > 0:
             incNum = incNum -1
@@ -579,7 +579,7 @@ class Backup(object):
         lastBackupPath = None
         entryList = os.listdir(self._options.dest)
         for entry in entryList:
-            if entry.endswith("_%s_%d" % (Backup.INCREMENTAL_BACKUP_DIR_TEXT, incNum)):
+            if entry.endswith("_{}_{}".format(Backup.INCREMENTAL_BACKUP_DIR_TEXT, incNum)):
                 lastBackupPath = entry
                 break
 
@@ -624,9 +624,9 @@ class Backup(object):
                 hostName = elems[0]
 
             else:
-                raise BackupError("%s is an invalid ssh server (E.G server or username@server or username@server:22)")
+                raise BackupError("{} is an invalid ssh server (E.G server or username@server or username@server:22)".format(hostName))
 
-            backupSrc = "%s@%s:%s" % (username, hostName, self._options.src)
+            backupSrc = "{}@{}:{}".format(username, hostName, self._options.src)
 
         return (backupSrc, sshPort)
 
@@ -654,11 +654,11 @@ class Backup(object):
 
             diskUsageBefore = DiskUsage(self._options.dest)
             backupDest = self._getBackupDest()
-            incompleteBackupDest    = "%s.%s" % (backupDest, Backup.NOT_STARTED_BACKUP_SUFFIX)
+            incompleteBackupDest    = "{}.{}".format(backupDest, Backup.NOT_STARTED_BACKUP_SUFFIX)
 
             backupsToday = self._getBackupsToday()
             if( backupsToday >= self._options.max_daily_backups ):
-                raise BackupError("%d backups have been created today. The maximum daily backup count (set on the command line) is %d. Therefore no more backups can be created today" % (backupsToday, self._options.max_daily_backups) )
+                raise BackupError("{} backups have been created today. The maximum daily backup count (set on the command line) is {}. Therefore no more backups can be created today".format(backupsToday, self._options.max_daily_backups) )
 
             #If required run the script before the backup starts (usefull for setting up LVM snapshots)
             if self._options.pre_script:
@@ -667,7 +667,7 @@ class Backup(object):
 
             backupSrc, sshPort = self._getSrc()
 
-            self._uo.info("Backing up %s to %s" % (backupSrc, backupDest) )
+            self._uo.info("Backing up {} to {}".format(backupSrc, backupDest) )
 
             #Get the full backup path associated with this backup
             fullBackupPath = self._getFullBackupPath(backupDest)
@@ -675,34 +675,34 @@ class Backup(object):
             #If this is the full backup
             if backupDest == fullBackupPath:
 
-                cmd="%s -avh --safe-links --delete" % (Backup.RSYNC_CMD)
+                cmd="{} -avh --safe-links --delete".format(Backup.RSYNC_CMD)
 
             else:
 
                 lastBackupPath = self._getLastBackupPath(backupDest)
-                cmd="%s -avh --safe-links --delete --link-dest=%s" % (Backup.RSYNC_CMD, lastBackupPath)
+                cmd="{} -avh --safe-links --delete --link-dest={}".format(Backup.RSYNC_CMD, lastBackupPath)
 
             #If the user has defined an exclusion pattern
             if self._options.src_exclude:
                 exludePatternList  = self._options.src_exclude.split(",")
                 for exludePattern in exludePatternList:
-                    cmd="%s --exclude %s" % (cmd, exludePattern)
+                    cmd="{} --exclude {}".format(cmd, exludePattern)
 
             #We set the backup destination with an incomplete suffix and then when the backup is complete
             #set it to the correct destination. This allows users to easily see if a backup did not complete
-            incompleteBackupDest = "%s.%s" % (backupDest, Backup.INCOMPLETE_BACKUP_SUFFIX)
+            incompleteBackupDest = "{}.{}".format(backupDest, Backup.INCOMPLETE_BACKUP_SUFFIX)
 
             if sshPort:
 
-                cmd="%s -e \"ssh -p %d -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\" %s %s" % (cmd, sshPort, backupSrc, incompleteBackupDest)
+                cmd="{} -e \"ssh -p {} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\" {} {}".format(cmd, sshPort, backupSrc, incompleteBackupDest)
 
             else:
 
-                cmd="%s %s %s" % (cmd, backupSrc, incompleteBackupDest)
+                cmd="{} {} {}".format(cmd, backupSrc, incompleteBackupDest)
 
-            self._notifyEmail("Backup Started", body="BACKUP COMMAND\n\n%s\n\n\nThe backup source is %s. The backup will be stored in the %s path" % (cmd, backupSrc, backupDest) )
+            self._notifyEmail("Backup Started", body="BACKUP COMMAND\n\n{}\n\n\nThe backup source is {}. The backup will be stored in the {} path".format(cmd, backupSrc, backupDest) )
 
-            self._uo.info("RSYNC CMD: %s" % (cmd) )
+            self._uo.info("RSYNC CMD: {}".format(cmd) )
 
             #Do the backup
             cmdOutput = check_output(cmd, shell=True, stderr=STDOUT)
@@ -715,10 +715,10 @@ class Backup(object):
 
             backupCompletedMessage = "Backup Completed Successfully"
             if diskUsageAfter.getFreeGB() < (self._options.low/1E3):
-                backupCompletedMessage =  "%s  !!! Low Disk Space !!!" % (backupCompletedMessage)
+                backupCompletedMessage =  "{}  !!! Low Disk Space !!!".format(backupCompletedMessage)
 
             self._uo.info(backupCompletedMessage)
-            self._notifyEmail(backupCompletedMessage, body="This backup has been stored in the %s path\n\n\n%s" % (backupDest, self._getBackupLog() ) )
+            self._notifyEmail(backupCompletedMessage, body="This backup has been stored in the {} path\n\n\n{}".format(backupDest, self._getBackupLog() ) )
 
             #Purge old backups if required
             self._purgeBackups()
@@ -759,14 +759,15 @@ class Backup(object):
         #for the moment this is the assumption made.
         backupSizeGB = diskUsageBefore.getFreeGB()-diskUsageAfter.getFreeGB()
         timeStr = time.strftime("%H:%M:%S", time.gmtime(time.time()-startTime) )
-        line = "%s: %s" % (thisBackupName, "Disk: Free %.1f GB, Used %.1f GB, Backup Size %.1f GB, Took %s" % ( diskUsageAfter.getFreeGB(), diskUsageAfter.getUsedGB(), backupSizeGB, timeStr))
+        backupDetails = "Disk: Free {:.1f} GB, Used {:.1f} GB, Backup Size {:.1f} GB, Took {}".format( diskUsageAfter.getFreeGB(), diskUsageAfter.getUsedGB(), backupSizeGB, timeStr)
+        line = "{}: {}".format(thisBackupName, backupDetails)
 
         backupSizeRecordLogFile = self._getBackupLogFile()
         if os.path.isfile(backupSizeRecordLogFile):
             fd = open(backupSizeRecordLogFile, 'a')
         else:
             fd = open(backupSizeRecordLogFile, 'w')
-        fd.write("%s\n" % (line) )
+        fd.write("{}\n".format(line) )
         fd.close()
         self._uo.info(line)
 
@@ -786,17 +787,20 @@ class Backup(object):
         """@brief Save all the command line options to a config file"""
         if self._options.save_config:
             pickle.dump( self._options, open(self._options.save_config, "wb") )
-            self._uo.info("Saved command line options to %s" % (self._options.save_config) )
+            self._uo.info("Saved command line options to {}".format(self._options.save_config) )
 
     def _loadConfig(self):
         """@brief Load the command line options saved previously to a config file"""
         if self._options.load_config:
             self._options = pickle.load( open(self._options.load_config, "rb") )
-            self._uo.info("Loaded command line options from %s" % (self._options.load_config) )
+            self._uo.info("Loaded command line options from {}".format(self._options.load_config) )
 
     def execute(self):
         """@brief Called to execute the backup process"""
 
+        if not os.path.isfile(Backup.RSYNC_CMD):
+            raise BackupError("{} file not found.".format(Backup.RSYNC_CMD))
+        
         try:
 
            self._doBackup()
@@ -812,7 +816,7 @@ class Backup(object):
                         #Include this in the error text
                         eTextList.append(e.output)
                     eTextList.append( str(e) )
-                    self._notifyEmail("Backup Failed", body = "%s\n\n\n%s" % ("\n".join(eTextList), self._getBackupLog()) )
+                    self._notifyEmail("Backup Failed", body = "{}\n\n\n{}".format("\n".join(eTextList), self._getBackupLog()) )
                 except:
                     pass
 
@@ -846,11 +850,11 @@ def main():
     opts.add_option("--save_config",            help="Followed by the config file to save the current command line options into.", default=None)
     opts.add_option("--load_config",            help="Followed by the config file to load all command line options from. If this option is used then no other command line options are required as they will all be loaded from the config file. This allows for a simpler command line once you've got the backup you're after.", default=None)
     opts.add_option("--show_cmd_line",          help="Show the command line (excluding --save_config, --load_config --list_options) and exit. This is useful if the --load_config option is used and you wish to find the original command line.", action="store_true", default=False)
-    opts.add_option("--max_daily_backups",      help="Followed by the maximum number of backups that can be taken in one day (default = 1). This ensures that no matter how many times backup is executed, the backups stored will be limited.", type="int", default=1)
+    opts.add_option("--max_daily_backups",      help="Followed by the maximum number of backups that can be taken in one day (default = 5). This ensures that no matter how many times backup is executed, the backups stored will be limited.", type="int", default=5)
 
-    opts.add_option("--disable_create_dest",    help="Disable the creatation of the dest path if it does not exist. By default the dest path is created if it does not exist", action="store_true", default=False)
+    opts.add_option("--disable_create_dest",    help="Disable the creation of the dest path if it does not exist. By default the dest path is created if it does not exist", action="store_true", default=False)
 
-    opts.add_option("--low",                    help="Low disk space threashold (MB). If the destination disk space drops below this then backup complete email messages will include a low disk space warning (default = 5000 MB).", type="int", default=5000)
+    opts.add_option("--low",                    help="Low disk space threshold (MB). If the destination disk space drops below this then backup complete email messages will include a low disk space warning (default = 5000 MB).", type="int", default=5000)
 
     opts.add_option("--debug",                  help="Enable debugging.", action="store_true", default=False)
 
