@@ -101,9 +101,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a32632feeba36506bc455ad31ab73660f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><pre class="fragment">@brief responsible for user viewable output
-   @param storeLogRam If True store log in ram as well as the file (default=False)</pre> 
-<p class="definition">Definition at line <a class="el" href="backup_8py_source.html#l00018">18</a> of file <a class="el" href="backup_8py_source.html">backup.py</a>.</p>
+<div class="textblock"><pre class="fragment">@brief responsible for user viewable output.</pre> 
+<p class="definition">Definition at line <a class="el" href="backup_8py_source.html#l00019">19</a> of file <a class="el" href="backup_8py_source.html">backup.py</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="ae64f0875afe3067b97ba370b354b9213"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae64f0875afe3067b97ba370b354b9213">&#9670;&nbsp;</a></span>__init__()</h2>
@@ -172,7 +171,7 @@ Public Member Functions</h2></td></tr>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;                    fd = open(self._logFile, <span class="stringliteral">&quot;w&quot;</span>)</div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160; </div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;                timeStamp = time.strftime(<span class="stringliteral">&quot;%Y-%b-%d_%H_%M_%S&quot;</span>, time.gmtime())</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;                fd.write(<span class="stringliteral">&quot;%s: %s\n&quot;</span> % (timeStamp, text))</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;                fd.write(<span class="stringliteral">&quot;{}: {}\n&quot;</span>.format(timeStamp, text))</div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;            <span class="keywordflow">finally</span>:</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;                <span class="keywordflow">if</span> fd:</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;                    fd.close()</div>
