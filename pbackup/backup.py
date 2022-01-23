@@ -844,8 +844,8 @@ def main():
     opts.add_option("--src_exclude",            help="Followed by a comma separated list of exclude patterns to be passed to rsync in order to exclude files in the src path from the backup (optional). See rsync documentation for more details of this.", default=None)
     opts.add_option("--ssh",                    help="Followed by the src ssh host address (optional). If supplied this can include the username, E.G username@myserver (if no username is supplied the current username will be used). This may also include the SSH port number E.G username@myserver:22", default=None)
     opts.add_option("--log",                    help="Followed by the absolute path of the backup log file (optional).", default=None)
-    opts.add_option("--max_full",               help="Followed by the maximum number of full backups to store (default=12). The defaults store 12 full backups and 31 incremental backups. With one backup a day this gives ~ 12 fullbackups a year with 31 incremental backups for each full backup (just over a years worth of history).", type="int", default=12)
-    opts.add_option("--max_inc",                help="Followed by the maximum number of incremental backups to store (default=94).", type="int", default=94)
+    opts.add_option("--max_full",               help="Followed by the maximum number of full backups to store (default=4).", type="int", default=4)
+    opts.add_option("--max_inc",                help="Followed by the maximum number of incremental backups to store (default=92).", type="int", default=92)
 
     opts.add_option("--email_server",           help="Followed by the email (SMTP) server for notification of backup progress (optional). The SMTP server address can include the port number of the SMTP server (E.G smtp.gmail.com:587).", default=None)
     opts.add_option("--email_list",             help="Followed by a comma separated list of email addresses to be sent email notifications of backup progress (optional).", default=None)

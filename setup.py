@@ -1,7 +1,7 @@
 import setuptools
 
 MODULE_NAME    = "pbackup"                                                      # The python module name
-VERSION        = "3.2"                                                          # The version of the application
+VERSION        = "3.3"                                                          # The version of the application
 AUTHOR         = "Paul Austen"                                                  # The name of the applications author
 AUTHOR_EMAIL   = "pausten.os@gmail.com"                                         # The email address of the author
 DESCRIPTION    = "A command line backup that creates backup history folders."   # A short description of the application
