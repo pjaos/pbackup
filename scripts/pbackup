@@ -1,2 +1,2 @@
 #!/bin/sh
-python3.8 -m pbackup.backup $@
+python3 -m pbackup.backup $@
