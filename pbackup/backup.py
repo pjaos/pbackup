@@ -506,14 +506,18 @@ class Backup(object):
 
             backupList = self._getBackupList()
             oldestBackupID = self._getFullBackupID(backupList[0])
+            if len(backupList) > 0:
+                self._uo.info("Purging old backups.")
 
             #Delete all backups that reference this full backup ID
             for backup in backupList:
                 if backup.find(".{}_{}".format(Backup.FULL_BACKUP_DIR_TEXT, oldestBackupID)) != -1:
+                    self._uo.info("Removing {}. Please wait...".format(backup))
                     delPath = os.path.join(self._options.dest, backup)
                     cmd = "rm -rf {}".format(delPath)
                     cmdOutput = check_output(cmd, shell=True, stderr=STDOUT)
-                    self._uo.info(cmdOutput)
+                    if cmdOutput is not None and len(cmdOutput):
+                        self._uo.info(cmdOutput)
                     self._uo.info("Removed {}".format(delPath) )
 
     def _getFullBackupPath(self, backupPath):
