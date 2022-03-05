@@ -418,9 +418,10 @@ class Backup(object):
 
             incrBackup = self._getLastIncrBackup(fullBackupID)
 
-            #If we are on the first day of the month then perform a full backup
+            #If the user wishes a full backup every month and we are on the
+            # first day of the month then perform a full backup.
             now = datetime.datetime.today()
-            if now.day == 1:
+            if self._options.monthly_full and now.day == 1:
 
                 backupDest = self._getFullBackupDest(fullBackupID+1)
 
@@ -805,7 +806,7 @@ class Backup(object):
 
         if not os.path.isfile(Backup.RSYNC_CMD):
             raise BackupError("{} file not found.".format(Backup.RSYNC_CMD))
-        
+
         try:
 
            self._doBackup()
@@ -864,6 +865,8 @@ def main():
     opts.add_option("--disable_create_dest",    help="Disable the creation of the dest path if it does not exist. By default the dest path is created if it does not exist", action="store_true", default=False)
 
     opts.add_option("--low",                    help="Low disk space threshold (MB). If the destination disk space drops below this then backup complete email messages will include a low disk space warning (default = 5000 MB).", type="int", default=5000)
+
+    opts.add_option("--monthly_full",           help="Perform a full backup on the first day of every month. This overrides the max_inc argument.", action="store_true", default=False)
 
     opts.add_option("--debug",                  help="Enable debugging.", action="store_true", default=False)
 
