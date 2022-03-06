@@ -502,23 +502,29 @@ class Backup(object):
         if os.path.isfile(oldBackupLogFile):
             os.remove(oldBackupLogFile)
 
+        backupList = self._getBackupList()
+        fullBackupID = self._getFullBackupID(backupList[0])
+
+        if self._getFullBackupCount()  > self._options.max_full:
+            self._uo.info("Purging old backups.")
+
         while self._getFullBackupCount()  > self._options.max_full:
 
-            backupList = self._getBackupList()
-            oldestBackupID = self._getFullBackupID(backupList[0])
-            if len(backupList) > 0:
-                self._uo.info("Purging old backups.")
+            arg = os.path.join(self._options.dest, "*.FULL_{}".format(fullBackupID))
+            self._uo.info("Removing full backup {}. Please wait...".format(fullBackupID))
+            cmd = "rm -rf {}".format(arg)
+            cmdOutput = check_output(cmd, shell=True, stderr=STDOUT)
+            if cmdOutput is not None and len(cmdOutput):
+                self._uo.info(cmdOutput.decode())
 
-            #Delete all backups that reference this full backup ID
-            for backup in backupList:
-                if backup.find(".{}_{}".format(Backup.FULL_BACKUP_DIR_TEXT, oldestBackupID)) != -1:
-                    self._uo.info("Removing {}. Please wait...".format(backup))
-                    delPath = os.path.join(self._options.dest, backup)
-                    cmd = "rm -rf {}".format(delPath)
-                    cmdOutput = check_output(cmd, shell=True, stderr=STDOUT)
-                    if cmdOutput is not None and len(cmdOutput):
-                        self._uo.info(cmdOutput)
-                    self._uo.info("Removed {}".format(delPath) )
+            self._uo.info("Removing {} incremental backups. Please wait...".format(fullBackupID))
+            arg = os.path.join(self._options.dest, "*.FULL_{}_*".format(fullBackupID))
+            cmd = "rm -rf {}".format(arg)
+            cmdOutput = check_output(cmd, shell=True, stderr=STDOUT)
+            if cmdOutput is not None and len(cmdOutput):
+                self._uo.info(cmdOutput.decode())
+
+            fullBackupID = fullBackupID + 1
 
     def _getFullBackupPath(self, backupPath):
         """@brief Get the full backup path associated with this backup path.
