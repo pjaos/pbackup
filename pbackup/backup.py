@@ -93,6 +93,7 @@ class Backup(object):
     BACKUP_STATE_ERROR              = 3
 
     RSYNC_CMD                       = "/usr/bin/rsync"
+    SSH_CMD                         = "/usr/bin/ssh"
 
     FULL_BACKUP_DIR_TEXT            = "FULL"
     INCREMENTAL_BACKUP_DIR_TEXT     = "INCR"
@@ -220,12 +221,13 @@ class Backup(object):
         """@brief Responsible for notifying the user of the backup progress via email
            @param subject The subject line of the notification email
            @param body The body text of the notification email"""
-        backupSrc, _ = self._getSrc()
+        if self._options.email_list:
+            backupSrc, _ = self._getSrc()
 
-        subject = "{}: '{}' {}".format(socket.gethostname(), backupSrc , subjectMessage)
-        if self._options.email_server:
-            toList = self._options.email_list.split(",")
-            self._sendMail( self._options.email_server, self._options.email_username, self._options.email_password, toList, subject, body)
+            subject = "{}: '{}' {}".format(socket.gethostname(), backupSrc , subjectMessage)
+            if self._options.email_server:
+                toList = self._options.email_list.split(",")
+                self._sendMail( self._options.email_server, self._options.email_username, self._options.email_password, toList, subject, body)
 
     def _getFullBackupID(self, backupDest):
         """@brief Given a backup dir name, extract the full backup ID
@@ -722,9 +724,14 @@ class Backup(object):
 
             #Do the backup
             cmdOutput = check_output(cmd, shell=True, stderr=STDOUT)
-            self._uo.info(cmdOutput)
+            if cmdOutput and len(cmdOutput) > 0:
+                lines = cmdOutput.decode().split("\n")
+                for line in lines:
+                    if not (line.startswith(".") and len(line) == 2):
+                        self._uo.info(line)
 
             os.rename(incompleteBackupDest, backupDest)
+            self._uo.info("Changed {} to {}".format(incompleteBackupDest, backupDest))
 
             diskUsageAfter = DiskUsage(self._options.dest)
             self._saveDiskUsage(backupDest, diskUsageBefore, diskUsageAfter, startTime)
@@ -811,11 +818,39 @@ class Backup(object):
             self._options = pickle.load( open(self._options.load_config, "rb") )
             self._uo.info("Loaded command line options from {}".format(self._options.load_config) )
 
-    def execute(self):
-        """@brief Called to execute the backup process"""
+    def _runChecks(self):
+        """@brief Check that the rsync program is present on the local and remote (if remote ssh connection defined."""
+        self._uo.info("Performing initial checks...")
 
         if not os.path.isfile(Backup.RSYNC_CMD):
-            raise BackupError("{} file not found.".format(Backup.RSYNC_CMD))
+            raise Exception("{} file not found on the local machine. Please install rsync and try again.".format(Backup.RSYNC_CMD))
+
+        self._uo.info("{} is installed locally.".format(Backup.RSYNC_CMD))
+
+        #If the backup source is on a remote machine.
+        if self._options.ssh:
+            if not os.path.isfile(Backup.SSH_CMD):
+                raise Exception("{} file not found on the local machine. Please install ssh and try again.".format(Backup.SSH_CMD))
+            self._uo.info("{} is installed locally.".format(Backup.SSH_CMD))
+            try:
+                src, port = self._getSrc()
+                cmd = "{} -p {} {} pwd".format(Backup.SSH_CMD, port, src)
+                self._uo.info("Checked ssh connection to remote source machine ({}).".format(self._options.ssh))
+            except:
+                raise Exception("Failed to connect to {} ssh server.".format(self._options.ssh))
+
+            try:
+                src, port = self._getSrc()
+                cmd = "{} -p {} {} which {}".format(Backup.SSH_CMD, port, src, Backup.RSYNC_CMD)
+                self._uo.info("{} is installed on remote source machine ({}).".format(Backup.RSYNC_CMD, self._options.ssh))
+
+            except:
+                raise Exception("rsync is not installed on the ssh server ({}). Please install it and try again.".format(self._options.ssh))
+
+
+    def execute(self):
+        """@brief Called to execute the backup process"""
+        self._runChecks()
 
         try:
 
@@ -847,8 +882,8 @@ def main():
 
     opts=OptionParser(usage="\n\
      A command line backup tool that provides full and incremental backups using hard links\n\
-     so that folders with a complete backup history are available. Rsync (/usr/bin/rsync)\n\
-     must be installed (installed by default on most Linux distributions).")
+     so that folders with a complete backup history are available using a minimum of storage space.\n\
+     Rsync (/usr/bin/rsync) must be installed (installed by default on most Linux distributions).")
 
     opts.add_option("--src",                    help="Followed by the absolute path of the path to backup (required). This may include any regular expressions that can be used on the rsync src. See rsync documentation for more details of this.", default=None)
     opts.add_option("--dest",                   help="Followed by the absolute path of the path to hold the backups. (required)", default=None)
