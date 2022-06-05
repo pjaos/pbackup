@@ -8,11 +8,12 @@ before pbackup is installed.
 # Using pbackup
 
 pbackup is a command line tool. The minimum command line options that are
-required are the --src and --dest. --src defines the backup source path. All the
-files in and under this folder will be copied to the folder defined by the
---dest argument.
+required are the --src and --dest. The --src argument defines the backup
+source path. All the files and folders in this folder will be copied to the
+folder defined by the --dest (backup destination path) argument.
 
 E.G
+
 If the folder /home/auser exists containing the following
 
 ```
@@ -51,7 +52,7 @@ INFO:  2022-Jun-02_06_03_45.FULL_1: Disk: Free 1071.0 GB, Used 668.1 GB, Backup 
 INFO:  Backup Completed Successfully
 ```
 
-After running the above commands the backup folder contains
+After running the above command the backup folder contains
 
 ```
 cd /tmp/backup_folder/
@@ -77,7 +78,9 @@ drwxr-xr-x 3 root root 4096 Jun  2 07:03 ..
 drwxr-xr-x 2 root root 4096 Jun  2 06:44 .
 ```
 
-If a file is added to the backup folder and a backup is performed an incremental backup folder is created. The backup.log file holds details of all backup attempts.
+As is shown above initially a full backup folder is created.
+
+If a file is added to the backup folder and a backup is performed an incremental backup folder is created.
 
 E.G
 
@@ -98,8 +101,7 @@ INFO:  2022-Jun-02_06_06_33.FULL_1_INCR_1: Disk: Free 1071.0 GB, Used 668.1 GB, 
 INFO:  Backup Completed Successfully
 ```
 
-The contents of the 2022-Jun-02_05_59_02.FULL_1_INCR_1 folder is shown below.
-The only only extra disk space used is that to store the file3.txt file.
+The contents of the 2022-Jun-02_05_59_02.FULL_1_INCR_1 folder is shown below. The only extra disk space used is that to store the file3.txt file.
 
 ```
 auser@amachine:/tmp/backup_folder/2022-Jun-02_06_06_33.FULL_1_INCR_1# ls -altR
@@ -120,11 +122,11 @@ drwxr-xr-x 2 root root 4096 Jun  2 06:44 .
 
 This shows the basic functionality of pbackup creating full and incremental backups.
 
-By default 92 incremental backups are created before another full backup is created. This can be changed on the command line using the --max_inc command line option. The --max_full command line option sets the maximum number of full backups that will be stored in the destination folder. Once this limit is reached older backups are removed.
+By default 92 incremental backups are created before another full backup is created. This can be changed on the command line using the --max_inc command line option. The --max_full command line option sets the maximum number of full backups (default = 4) that will be stored in the destination folder. Once this limit is reached older backups are removed.
 
 # Backing up from data from a remote machine
 
-The remote machine must have an ssh server running and have rsync installed. To backup from a remote machine the --ssh command line argument must be used. When a remote machine is defined the backup source will reside on a remote machine and the data will be pulled to the local machine.
+The remote machine must have an ssh server running and have rsync installed. To backup from a remote machine the --ssh command line argument is used. When a remote machine is defined the backup source will reside on a remote machine and the data will be pulled to the local machine.
 
 If you wish the backup from a remote machine the --ssh command line argument must be used.
 
@@ -149,7 +151,7 @@ INFO:  Backup Completed Successfully
 
 # Sending an email
 
-pbackup allow the user to send emails when the backup process starts and when the backup process completes. The completion email details the disk space used for that backup and the free space on the destination file system.
+pbackup allows the user to send emails when the backup process starts and when the backup process completes. The completion email details the disk space used for that backup and the free space on the destination file system.
 
 The following arguments can be added to the command line in order to send an email as detailed above.
 
@@ -167,22 +169,15 @@ The following command line argument can be defined to set a comma separated list
 
 The --test_email command line argument can be added to the command line in order to check that the email send process works correctly.
 
+E.G
+
 ```
-   E.G
    pbackup --email_server=smtp.gmail.com:587 --email_username=auser --email_password=apassword --email_list asomeuser@adom.com --test_email
 ```
 
 
-
-
-
-
-
-
-
-
-
 ## Command line help
+pbackup supports the -h/--help command line arguemnt to display the help text as shown below.
 
 ```
 pbackup -h
