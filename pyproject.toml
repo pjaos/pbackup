@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "pbackup"
+version = "3.8"
+description = ""
+authors = ["Paul Austen <pjaos@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+[tool.poetry.scripts]
+pbackup = "pbackup.backup:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['not_5fstarted_5fbackup_5fsuffix_64',['NOT_STARTED_BACKUP_SUFFIX',['../classpbackup_1_1backup_1_1Backup.html#acfd6c67a9e18750cdce119f10a01ab24',1,'pbackup::backup::Backup']]]
+  ['incomplete_5fbackup_5fsuffix_0',['INCOMPLETE_BACKUP_SUFFIX',['../classpbackup_1_1backup_1_1Backup.html#a5ddff078ad10903950f10ed36131719e',1,'pbackup::backup::Backup']]],
+  ['incremental_5fbackup_5fdir_5ftext_1',['INCREMENTAL_BACKUP_DIR_TEXT',['../classpbackup_1_1backup_1_1Backup.html#a6873ca698e6e9756cded853a176a2fb4',1,'pbackup::backup::Backup']]]
 ];

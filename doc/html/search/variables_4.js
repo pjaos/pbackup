@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['rsync_5fcmd_65',['RSYNC_CMD',['../classpbackup_1_1backup_1_1Backup.html#afeab65651fa544517f43663f87895930',1,'pbackup::backup::Backup']]]
+  ['not_5fstarted_5fbackup_5fsuffix_0',['NOT_STARTED_BACKUP_SUFFIX',['../classpbackup_1_1backup_1_1Backup.html#ab2ba0447bb3cf152016ec90c4a0ddd15',1,'pbackup::backup::Backup']]]
 ];

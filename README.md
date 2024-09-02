@@ -5,6 +5,17 @@ A mixture of full and incremental backups can be defined. pbackup uses rsync
 to perform the backup operations. Therefore rysync that must be installed
 before pbackup is installed.
 
+# Installing pbackup
+pbackup can be installed using pipx (see https://pipx.pypa.io/latest/installation/ for details of how to install pipx) as shown below.
+
+```
+pipx install dist/pbackup-3.8-py3-none-any.whl
+  installed package pbackup 3.8, installed using Python 3.12.3
+  These apps are now globally available
+    - pbackup
+done! ✨ 🌟 ✨
+```
+
 # Using pbackup
 
 pbackup is a command line tool. The minimum command line options that are

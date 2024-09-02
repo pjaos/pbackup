@@ -223,7 +223,6 @@ class Backup(object):
            @param body The body text of the notification email"""
         if self._options.email_list:
             backupSrc, _ = self._getSrc()
-
             subject = "{}: '{}' {}".format(socket.gethostname(), backupSrc , subjectMessage)
             if self._options.email_server:
                 toList = self._options.email_list.split(",")
@@ -368,10 +367,17 @@ class Backup(object):
            @param subject  The subject text line of the email
            @param body     The body text of the email
         """
-
+        if username or password:
+            if not username:
+                raise Exception("You have define the email server password but not the username.")
+            if not password:
+                raise Exception("You have define the email server username but not the password.")
+            
+        srcID = f"{getpass.getuser()}@{socket.gethostname()}"
+        srcID = "pausten.ge@gmail.com"
         # Prepare actual message
-        message = """\From: {}\nTo: {}\nSubject: {}\n\n{}
-        """.format(username, ", ".join(toList), subject, body)
+        message = """From: {}\nTo: {}\nSubject: {}\n\n{}
+        """.format(srcID, ", ".join(toList), subject, body)
         try:
             port = 587
             if server.find(":") != -1:
@@ -646,6 +652,9 @@ class Backup(object):
 
             backupSrc = "{}@{}:{}".format(username, hostName, self._options.src)
 
+        if backupSrc is None:
+            backupSrc = ''
+
         return (backupSrc, sshPort)
 
     def _getBackupsToday(self):
@@ -834,14 +843,12 @@ class Backup(object):
             self._uo.info("{} is installed locally.".format(Backup.SSH_CMD))
             try:
                 src, port = self._getSrc()
-                cmd = "{} -p {} {} pwd".format(Backup.SSH_CMD, port, src)
                 self._uo.info("Checked ssh connection to remote source machine ({}).".format(self._options.ssh))
             except:
                 raise Exception("Failed to connect to {} ssh server.".format(self._options.ssh))
 
             try:
                 src, port = self._getSrc()
-                cmd = "{} -p {} {} which {}".format(Backup.SSH_CMD, port, src, Backup.RSYNC_CMD)
                 self._uo.info("{} is installed on remote source machine ({}).".format(Backup.RSYNC_CMD, self._options.ssh))
 
             except:

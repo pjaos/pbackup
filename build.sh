@@ -1,6 +1,7 @@
-#!/bin/sh
+#!/bin/bash
+set -e
+rm -rf dist/*.whl
 rm -rf dist
-rm -rf doc
+pyflakes3 pbackup/*.py
 doxygen
-python3 -m pip install --upgrade build
-python3 -m build
+poetry -vvv build
