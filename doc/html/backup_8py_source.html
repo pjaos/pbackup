@@ -829,313 +829,339 @@ $(document).ready(function() { init_codefold(0); });
 <div class="line"><a id="l00672" name="l00672"></a><span class="lineno">  672</span> </div>
 </div>
 <div class="foldopen" id="foldopen00673" data-start="" data-end="">
-<div class="line"><a id="l00673" name="l00673"></a><span class="lineno"><a class="line" href="classpbackup_1_1backup_1_1Backup.html#adf0e724272f9f42e9b9c75f688f5339a">  673</a></span>    def _doBackup(self):</div>
-<div class="line"><a id="l00674" name="l00674"></a><span class="lineno">  674</span>        &quot;&quot;&quot;@brief Execute the rsync command to perform the backup&quot;&quot;&quot;</div>
-<div class="line"><a id="l00675" name="l00675"></a><span class="lineno">  675</span>        backupDest              = None</div>
-<div class="line"><a id="l00676" name="l00676"></a><span class="lineno">  676</span>        diskUsageBefore         = None</div>
-<div class="line"><a id="l00677" name="l00677"></a><span class="lineno">  677</span>        diskUsageAfter          = None</div>
-<div class="line"><a id="l00678" name="l00678"></a><span class="lineno">  678</span>        incompleteBackupDest    = None</div>
-<div class="line"><a id="l00679" name="l00679"></a><span class="lineno">  679</span>        try:</div>
-<div class="line"><a id="l00680" name="l00680"></a><span class="lineno">  680</span>            startTime = time.time()</div>
-<div class="line"><a id="l00681" name="l00681"></a><span class="lineno">  681</span> </div>
-<div class="line"><a id="l00682" name="l00682"></a><span class="lineno">  682</span>            diskUsageBefore = DiskUsage(self._options.dest)</div>
-<div class="line"><a id="l00683" name="l00683"></a><span class="lineno">  683</span>            backupDest = self._getBackupDest()</div>
-<div class="line"><a id="l00684" name="l00684"></a><span class="lineno">  684</span>            incompleteBackupDest    = &quot;{}.{}&quot;.format(backupDest, Backup.NOT_STARTED_BACKUP_SUFFIX)</div>
-<div class="line"><a id="l00685" name="l00685"></a><span class="lineno">  685</span> </div>
-<div class="line"><a id="l00686" name="l00686"></a><span class="lineno">  686</span>            backupsToday = self._getBackupsToday()</div>
-<div class="line"><a id="l00687" name="l00687"></a><span class="lineno">  687</span>            if( backupsToday &gt;= self._options.max_daily_backups ):</div>
-<div class="line"><a id="l00688" name="l00688"></a><span class="lineno">  688</span>                raise BackupError(&quot;{} backups have been created today. The maximum daily backup count (set on the command line) is {}. Therefore no more backups can be created today&quot;.format(backupsToday, self._options.max_daily_backups) )</div>
+<div class="line"><a id="l00673" name="l00673"></a><span class="lineno"><a class="line" href="classpbackup_1_1backup_1_1Backup.html#acf623b3aa88d43f1d613b1325d5126a8">  673</a></span>    def _addExclusions(self, cmd):</div>
+<div class="line"><a id="l00674" name="l00674"></a><span class="lineno">  674</span>        &quot;&quot;&quot;@brief Check any user defined exclusion patterns.</div>
+<div class="line"><a id="l00675" name="l00675"></a><span class="lineno">  675</span>           @param cmd The rsync command thus far.</div>
+<div class="line"><a id="l00676" name="l00676"></a><span class="lineno">  676</span>           @return The rsync command with exclusions.&quot;&quot;&quot;</div>
+<div class="line"><a id="l00677" name="l00677"></a><span class="lineno">  677</span>        #If the user has defined an exclusion pattern</div>
+<div class="line"><a id="l00678" name="l00678"></a><span class="lineno">  678</span>        if self._options.src_exclude:</div>
+<div class="line"><a id="l00679" name="l00679"></a><span class="lineno">  679</span>            exludePatternList  = self._options.src_exclude.split(&quot;,&quot;)</div>
+<div class="line"><a id="l00680" name="l00680"></a><span class="lineno">  680</span>            for exludePattern in exludePatternList:</div>
+<div class="line"><a id="l00681" name="l00681"></a><span class="lineno">  681</span>                if exludePattern.startswith(self._options.src):</div>
+<div class="line"><a id="l00682" name="l00682"></a><span class="lineno">  682</span>                    exludePattern = exludePattern.replace(self._options.src, &quot;&quot;)</div>
+<div class="line"><a id="l00683" name="l00683"></a><span class="lineno">  683</span>                # If exclude pattern does not contain a wildcard character.</div>
+<div class="line"><a id="l00684" name="l00684"></a><span class="lineno">  684</span>                if exludePattern.find(&quot;*&quot;) == -1:</div>
+<div class="line"><a id="l00685" name="l00685"></a><span class="lineno">  685</span>                    # Check that it&#39;s an existing file or folder.</div>
+<div class="line"><a id="l00686" name="l00686"></a><span class="lineno">  686</span>                    fullPath = os.path.join(self._options.src, exludePattern)</div>
+<div class="line"><a id="l00687" name="l00687"></a><span class="lineno">  687</span>                    if not os.path.isdir(fullPath) and not os.path.isfile(fullPath):</div>
+<div class="line"><a id="l00688" name="l00688"></a><span class="lineno">  688</span>                        raise Exception(f&quot;Failed to exclude {fullPath} as path/file not found.&quot;)</div>
 <div class="line"><a id="l00689" name="l00689"></a><span class="lineno">  689</span> </div>
-<div class="line"><a id="l00690" name="l00690"></a><span class="lineno">  690</span>            #If required run the script before the backup starts (usefull for setting up LVM snapshots)</div>
-<div class="line"><a id="l00691" name="l00691"></a><span class="lineno">  691</span>            if self._options.pre_script:</div>
-<div class="line"><a id="l00692" name="l00692"></a><span class="lineno">  692</span>                cmdOutput = check_output(self._options.pre_script, shell=True, stderr=STDOUT)</div>
-<div class="line"><a id="l00693" name="l00693"></a><span class="lineno">  693</span>                self._uo.info(cmdOutput)</div>
-<div class="line"><a id="l00694" name="l00694"></a><span class="lineno">  694</span> </div>
-<div class="line"><a id="l00695" name="l00695"></a><span class="lineno">  695</span>            backupSrc, sshPort = self._getSrc()</div>
-<div class="line"><a id="l00696" name="l00696"></a><span class="lineno">  696</span> </div>
-<div class="line"><a id="l00697" name="l00697"></a><span class="lineno">  697</span>            self._uo.info(&quot;Backing up {} to {}&quot;.format(backupSrc, backupDest) )</div>
-<div class="line"><a id="l00698" name="l00698"></a><span class="lineno">  698</span> </div>
-<div class="line"><a id="l00699" name="l00699"></a><span class="lineno">  699</span>            #Get the full backup path associated with this backup</div>
-<div class="line"><a id="l00700" name="l00700"></a><span class="lineno">  700</span>            fullBackupPath = self._getFullBackupPath(backupDest)</div>
-<div class="line"><a id="l00701" name="l00701"></a><span class="lineno">  701</span> </div>
-<div class="line"><a id="l00702" name="l00702"></a><span class="lineno">  702</span>            #If this is the full backup</div>
-<div class="line"><a id="l00703" name="l00703"></a><span class="lineno">  703</span>            if backupDest == fullBackupPath:</div>
-<div class="line"><a id="l00704" name="l00704"></a><span class="lineno">  704</span> </div>
-<div class="line"><a id="l00705" name="l00705"></a><span class="lineno">  705</span>                cmd=&quot;{} -avh --safe-links --delete&quot;.format(Backup.RSYNC_CMD)</div>
+<div class="line"><a id="l00690" name="l00690"></a><span class="lineno">  690</span>                cmd=&quot;{} --exclude {}&quot;.format(cmd, exludePattern)</div>
+<div class="line"><a id="l00691" name="l00691"></a><span class="lineno">  691</span> </div>
+<div class="line"><a id="l00692" name="l00692"></a><span class="lineno">  692</span>        return cmd</div>
+<div class="line"><a id="l00693" name="l00693"></a><span class="lineno">  693</span> </div>
+</div>
+<div class="foldopen" id="foldopen00694" data-start="" data-end="">
+<div class="line"><a id="l00694" name="l00694"></a><span class="lineno"><a class="line" href="classpbackup_1_1backup_1_1Backup.html#adf0e724272f9f42e9b9c75f688f5339a">  694</a></span>    def _doBackup(self):</div>
+<div class="line"><a id="l00695" name="l00695"></a><span class="lineno">  695</span>        &quot;&quot;&quot;@brief Execute the rsync command to perform the backup&quot;&quot;&quot;</div>
+<div class="line"><a id="l00696" name="l00696"></a><span class="lineno">  696</span>        backupDest              = None</div>
+<div class="line"><a id="l00697" name="l00697"></a><span class="lineno">  697</span>        diskUsageBefore         = None</div>
+<div class="line"><a id="l00698" name="l00698"></a><span class="lineno">  698</span>        diskUsageAfter          = None</div>
+<div class="line"><a id="l00699" name="l00699"></a><span class="lineno">  699</span>        incompleteBackupDest    = None</div>
+<div class="line"><a id="l00700" name="l00700"></a><span class="lineno">  700</span>        try:</div>
+<div class="line"><a id="l00701" name="l00701"></a><span class="lineno">  701</span>            startTime = time.time()</div>
+<div class="line"><a id="l00702" name="l00702"></a><span class="lineno">  702</span> </div>
+<div class="line"><a id="l00703" name="l00703"></a><span class="lineno">  703</span>            diskUsageBefore = DiskUsage(self._options.dest)</div>
+<div class="line"><a id="l00704" name="l00704"></a><span class="lineno">  704</span>            backupDest = self._getBackupDest()</div>
+<div class="line"><a id="l00705" name="l00705"></a><span class="lineno">  705</span>            incompleteBackupDest    = &quot;{}.{}&quot;.format(backupDest, Backup.NOT_STARTED_BACKUP_SUFFIX)</div>
 <div class="line"><a id="l00706" name="l00706"></a><span class="lineno">  706</span> </div>
-<div class="line"><a id="l00707" name="l00707"></a><span class="lineno">  707</span>            else:</div>
-<div class="line"><a id="l00708" name="l00708"></a><span class="lineno">  708</span> </div>
-<div class="line"><a id="l00709" name="l00709"></a><span class="lineno">  709</span>                lastBackupPath = self._getLastBackupPath(backupDest)</div>
-<div class="line"><a id="l00710" name="l00710"></a><span class="lineno">  710</span>                cmd=&quot;{} -avh --safe-links --delete --link-dest={}&quot;.format(Backup.RSYNC_CMD, lastBackupPath)</div>
-<div class="line"><a id="l00711" name="l00711"></a><span class="lineno">  711</span> </div>
-<div class="line"><a id="l00712" name="l00712"></a><span class="lineno">  712</span>            #If the user has defined an exclusion pattern</div>
-<div class="line"><a id="l00713" name="l00713"></a><span class="lineno">  713</span>            if self._options.src_exclude:</div>
-<div class="line"><a id="l00714" name="l00714"></a><span class="lineno">  714</span>                exludePatternList  = self._options.src_exclude.split(&quot;,&quot;)</div>
-<div class="line"><a id="l00715" name="l00715"></a><span class="lineno">  715</span>                for exludePattern in exludePatternList:</div>
-<div class="line"><a id="l00716" name="l00716"></a><span class="lineno">  716</span>                    cmd=&quot;{} --exclude {}&quot;.format(cmd, exludePattern)</div>
+<div class="line"><a id="l00707" name="l00707"></a><span class="lineno">  707</span>            backupsToday = self._getBackupsToday()</div>
+<div class="line"><a id="l00708" name="l00708"></a><span class="lineno">  708</span>            if( backupsToday &gt;= self._options.max_daily_backups ):</div>
+<div class="line"><a id="l00709" name="l00709"></a><span class="lineno">  709</span>                raise BackupError(&quot;{} backups have been created today. The maximum daily backup count (set on the command line) is {}. Therefore no more backups can be created today&quot;.format(backupsToday, self._options.max_daily_backups) )</div>
+<div class="line"><a id="l00710" name="l00710"></a><span class="lineno">  710</span> </div>
+<div class="line"><a id="l00711" name="l00711"></a><span class="lineno">  711</span>            #If required run the script before the backup starts (usefull for setting up LVM snapshots)</div>
+<div class="line"><a id="l00712" name="l00712"></a><span class="lineno">  712</span>            if self._options.pre_script:</div>
+<div class="line"><a id="l00713" name="l00713"></a><span class="lineno">  713</span>                cmdOutput = check_output(self._options.pre_script, shell=True, stderr=STDOUT)</div>
+<div class="line"><a id="l00714" name="l00714"></a><span class="lineno">  714</span>                self._uo.info(cmdOutput)</div>
+<div class="line"><a id="l00715" name="l00715"></a><span class="lineno">  715</span> </div>
+<div class="line"><a id="l00716" name="l00716"></a><span class="lineno">  716</span>            backupSrc, sshPort = self._getSrc()</div>
 <div class="line"><a id="l00717" name="l00717"></a><span class="lineno">  717</span> </div>
-<div class="line"><a id="l00718" name="l00718"></a><span class="lineno">  718</span>            #We set the backup destination with an incomplete suffix and then when the backup is complete</div>
-<div class="line"><a id="l00719" name="l00719"></a><span class="lineno">  719</span>            #set it to the correct destination. This allows users to easily see if a backup did not complete</div>
-<div class="line"><a id="l00720" name="l00720"></a><span class="lineno">  720</span>            incompleteBackupDest = &quot;{}.{}&quot;.format(backupDest, Backup.INCOMPLETE_BACKUP_SUFFIX)</div>
-<div class="line"><a id="l00721" name="l00721"></a><span class="lineno">  721</span> </div>
-<div class="line"><a id="l00722" name="l00722"></a><span class="lineno">  722</span>            if sshPort:</div>
-<div class="line"><a id="l00723" name="l00723"></a><span class="lineno">  723</span> </div>
-<div class="line"><a id="l00724" name="l00724"></a><span class="lineno">  724</span>                cmd=&quot;{} -e \&quot;ssh -p {} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\&quot; {} {}&quot;.format(cmd, sshPort, backupSrc, incompleteBackupDest)</div>
+<div class="line"><a id="l00718" name="l00718"></a><span class="lineno">  718</span>            self._uo.info(&quot;Backing up {} to {}&quot;.format(backupSrc, backupDest) )</div>
+<div class="line"><a id="l00719" name="l00719"></a><span class="lineno">  719</span> </div>
+<div class="line"><a id="l00720" name="l00720"></a><span class="lineno">  720</span>            #Get the full backup path associated with this backup</div>
+<div class="line"><a id="l00721" name="l00721"></a><span class="lineno">  721</span>            fullBackupPath = self._getFullBackupPath(backupDest)</div>
+<div class="line"><a id="l00722" name="l00722"></a><span class="lineno">  722</span> </div>
+<div class="line"><a id="l00723" name="l00723"></a><span class="lineno">  723</span>            #If this is the full backup</div>
+<div class="line"><a id="l00724" name="l00724"></a><span class="lineno">  724</span>            if backupDest == fullBackupPath:</div>
 <div class="line"><a id="l00725" name="l00725"></a><span class="lineno">  725</span> </div>
-<div class="line"><a id="l00726" name="l00726"></a><span class="lineno">  726</span>            else:</div>
+<div class="line"><a id="l00726" name="l00726"></a><span class="lineno">  726</span>                cmd=&quot;{} -avh --safe-links --delete&quot;.format(Backup.RSYNC_CMD)</div>
 <div class="line"><a id="l00727" name="l00727"></a><span class="lineno">  727</span> </div>
-<div class="line"><a id="l00728" name="l00728"></a><span class="lineno">  728</span>                cmd=&quot;{} {} {}&quot;.format(cmd, backupSrc, incompleteBackupDest)</div>
+<div class="line"><a id="l00728" name="l00728"></a><span class="lineno">  728</span>            else:</div>
 <div class="line"><a id="l00729" name="l00729"></a><span class="lineno">  729</span> </div>
-<div class="line"><a id="l00730" name="l00730"></a><span class="lineno">  730</span>            self._notifyEmail(&quot;Backup Started&quot;, body=&quot;BACKUP COMMAND\n\n{}\n\n\nThe backup source is {}. The backup will be stored in the {} path&quot;.format(cmd, backupSrc, backupDest) )</div>
-<div class="line"><a id="l00731" name="l00731"></a><span class="lineno">  731</span> </div>
-<div class="line"><a id="l00732" name="l00732"></a><span class="lineno">  732</span>            self._uo.info(&quot;RSYNC CMD: {}&quot;.format(cmd) )</div>
-<div class="line"><a id="l00733" name="l00733"></a><span class="lineno">  733</span> </div>
-<div class="line"><a id="l00734" name="l00734"></a><span class="lineno">  734</span>            #Do the backup</div>
-<div class="line"><a id="l00735" name="l00735"></a><span class="lineno">  735</span>            cmdOutput = check_output(cmd, shell=True, stderr=STDOUT)</div>
-<div class="line"><a id="l00736" name="l00736"></a><span class="lineno">  736</span>            if cmdOutput and len(cmdOutput) &gt; 0:</div>
-<div class="line"><a id="l00737" name="l00737"></a><span class="lineno">  737</span>                lines = cmdOutput.decode().split(&quot;\n&quot;)</div>
-<div class="line"><a id="l00738" name="l00738"></a><span class="lineno">  738</span>                for line in lines:</div>
-<div class="line"><a id="l00739" name="l00739"></a><span class="lineno">  739</span>                    if not (line.startswith(&quot;.&quot;) and len(line) == 2):</div>
-<div class="line"><a id="l00740" name="l00740"></a><span class="lineno">  740</span>                        self._uo.info(line)</div>
-<div class="line"><a id="l00741" name="l00741"></a><span class="lineno">  741</span> </div>
-<div class="line"><a id="l00742" name="l00742"></a><span class="lineno">  742</span>            os.rename(incompleteBackupDest, backupDest)</div>
-<div class="line"><a id="l00743" name="l00743"></a><span class="lineno">  743</span>            self._uo.info(&quot;Changed {} to {}&quot;.format(incompleteBackupDest, backupDest))</div>
+<div class="line"><a id="l00730" name="l00730"></a><span class="lineno">  730</span>                lastBackupPath = self._getLastBackupPath(backupDest)</div>
+<div class="line"><a id="l00731" name="l00731"></a><span class="lineno">  731</span>                cmd=&quot;{} -avh --safe-links --delete --link-dest={}&quot;.format(Backup.RSYNC_CMD, lastBackupPath)</div>
+<div class="line"><a id="l00732" name="l00732"></a><span class="lineno">  732</span> </div>
+<div class="line"><a id="l00733" name="l00733"></a><span class="lineno">  733</span>            cmd = self._addExclusions(cmd)</div>
+<div class="line"><a id="l00734" name="l00734"></a><span class="lineno">  734</span> </div>
+<div class="line"><a id="l00735" name="l00735"></a><span class="lineno">  735</span>            #We set the backup destination with an incomplete suffix and then when the backup is complete</div>
+<div class="line"><a id="l00736" name="l00736"></a><span class="lineno">  736</span>            #set it to the correct destination. This allows users to easily see if a backup did not complete</div>
+<div class="line"><a id="l00737" name="l00737"></a><span class="lineno">  737</span>            incompleteBackupDest = &quot;{}.{}&quot;.format(backupDest, Backup.INCOMPLETE_BACKUP_SUFFIX)</div>
+<div class="line"><a id="l00738" name="l00738"></a><span class="lineno">  738</span> </div>
+<div class="line"><a id="l00739" name="l00739"></a><span class="lineno">  739</span>            if sshPort:</div>
+<div class="line"><a id="l00740" name="l00740"></a><span class="lineno">  740</span> </div>
+<div class="line"><a id="l00741" name="l00741"></a><span class="lineno">  741</span>                cmd=&quot;{} -e \&quot;ssh -p {} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\&quot; {} {}&quot;.format(cmd, sshPort, backupSrc, incompleteBackupDest)</div>
+<div class="line"><a id="l00742" name="l00742"></a><span class="lineno">  742</span> </div>
+<div class="line"><a id="l00743" name="l00743"></a><span class="lineno">  743</span>            else:</div>
 <div class="line"><a id="l00744" name="l00744"></a><span class="lineno">  744</span> </div>
-<div class="line"><a id="l00745" name="l00745"></a><span class="lineno">  745</span>            diskUsageAfter = DiskUsage(self._options.dest)</div>
-<div class="line"><a id="l00746" name="l00746"></a><span class="lineno">  746</span>            self._saveDiskUsage(backupDest, diskUsageBefore, diskUsageAfter, startTime)</div>
-<div class="line"><a id="l00747" name="l00747"></a><span class="lineno">  747</span> </div>
-<div class="line"><a id="l00748" name="l00748"></a><span class="lineno">  748</span>            backupCompletedMessage = &quot;Backup Completed Successfully&quot;</div>
-<div class="line"><a id="l00749" name="l00749"></a><span class="lineno">  749</span>            if diskUsageAfter.getFreeGB() &lt; (self._options.low/1E3):</div>
-<div class="line"><a id="l00750" name="l00750"></a><span class="lineno">  750</span>                backupCompletedMessage =  &quot;{}  !!! Low Disk Space !!!&quot;.format(backupCompletedMessage)</div>
-<div class="line"><a id="l00751" name="l00751"></a><span class="lineno">  751</span> </div>
-<div class="line"><a id="l00752" name="l00752"></a><span class="lineno">  752</span>            self._uo.info(backupCompletedMessage)</div>
-<div class="line"><a id="l00753" name="l00753"></a><span class="lineno">  753</span>            self._notifyEmail(backupCompletedMessage, body=&quot;This backup has been stored in the {} path\n\n\n{}&quot;.format(backupDest, self._getBackupLog() ) )</div>
-<div class="line"><a id="l00754" name="l00754"></a><span class="lineno">  754</span> </div>
-<div class="line"><a id="l00755" name="l00755"></a><span class="lineno">  755</span>            #Purge old backups if required</div>
-<div class="line"><a id="l00756" name="l00756"></a><span class="lineno">  756</span>            self._purgeBackups()</div>
-<div class="line"><a id="l00757" name="l00757"></a><span class="lineno">  757</span> </div>
-<div class="line"><a id="l00758" name="l00758"></a><span class="lineno">  758</span>        finally:</div>
-<div class="line"><a id="l00759" name="l00759"></a><span class="lineno">  759</span>            #If the backup failed, create the record of the backup space used</div>
-<div class="line"><a id="l00760" name="l00760"></a><span class="lineno">  760</span>            if not diskUsageAfter:</div>
-<div class="line"><a id="l00761" name="l00761"></a><span class="lineno">  761</span>                diskUsageAfter = DiskUsage(self._options.dest)</div>
-<div class="line"><a id="l00762" name="l00762"></a><span class="lineno">  762</span>                self._saveDiskUsage(incompleteBackupDest, diskUsageBefore, diskUsageAfter, startTime)</div>
-<div class="line"><a id="l00763" name="l00763"></a><span class="lineno">  763</span> </div>
-<div class="line"><a id="l00764" name="l00764"></a><span class="lineno">  764</span>            #If required run the script after the backup complete (usefull for closing down LVM snapshots)</div>
-<div class="line"><a id="l00765" name="l00765"></a><span class="lineno">  765</span>            if self._options.post_script:</div>
-<div class="line"><a id="l00766" name="l00766"></a><span class="lineno">  766</span>                cmdOutput = check_output(self._options.post_script, shell=True, stderr=STDOUT)</div>
-<div class="line"><a id="l00767" name="l00767"></a><span class="lineno">  767</span>                self._uo.info(cmdOutput)</div>
+<div class="line"><a id="l00745" name="l00745"></a><span class="lineno">  745</span>                cmd=&quot;{} {} {}&quot;.format(cmd, backupSrc, incompleteBackupDest)</div>
+<div class="line"><a id="l00746" name="l00746"></a><span class="lineno">  746</span> </div>
+<div class="line"><a id="l00747" name="l00747"></a><span class="lineno">  747</span>            self._notifyEmail(&quot;Backup Started&quot;, body=&quot;BACKUP COMMAND\n\n{}\n\n\nThe backup source is {}. The backup will be stored in the {} path&quot;.format(cmd, backupSrc, backupDest) )</div>
+<div class="line"><a id="l00748" name="l00748"></a><span class="lineno">  748</span> </div>
+<div class="line"><a id="l00749" name="l00749"></a><span class="lineno">  749</span>            self._uo.info(&quot;RSYNC CMD: {}&quot;.format(cmd) )</div>
+<div class="line"><a id="l00750" name="l00750"></a><span class="lineno">  750</span> </div>
+<div class="line"><a id="l00751" name="l00751"></a><span class="lineno">  751</span>            #Do the backup</div>
+<div class="line"><a id="l00752" name="l00752"></a><span class="lineno">  752</span>            cmdOutput = check_output(cmd, shell=True, stderr=STDOUT)</div>
+<div class="line"><a id="l00753" name="l00753"></a><span class="lineno">  753</span>            if cmdOutput and len(cmdOutput) &gt; 0:</div>
+<div class="line"><a id="l00754" name="l00754"></a><span class="lineno">  754</span>                lines = cmdOutput.decode().split(&quot;\n&quot;)</div>
+<div class="line"><a id="l00755" name="l00755"></a><span class="lineno">  755</span>                for line in lines:</div>
+<div class="line"><a id="l00756" name="l00756"></a><span class="lineno">  756</span>                    if not (line.startswith(&quot;.&quot;) and len(line) == 2):</div>
+<div class="line"><a id="l00757" name="l00757"></a><span class="lineno">  757</span>                        self._uo.info(line)</div>
+<div class="line"><a id="l00758" name="l00758"></a><span class="lineno">  758</span> </div>
+<div class="line"><a id="l00759" name="l00759"></a><span class="lineno">  759</span>            os.rename(incompleteBackupDest, backupDest)</div>
+<div class="line"><a id="l00760" name="l00760"></a><span class="lineno">  760</span>            self._uo.info(&quot;Changed {} to {}&quot;.format(incompleteBackupDest, backupDest))</div>
+<div class="line"><a id="l00761" name="l00761"></a><span class="lineno">  761</span> </div>
+<div class="line"><a id="l00762" name="l00762"></a><span class="lineno">  762</span>            diskUsageAfter = DiskUsage(self._options.dest)</div>
+<div class="line"><a id="l00763" name="l00763"></a><span class="lineno">  763</span>            self._saveDiskUsage(backupDest, diskUsageBefore, diskUsageAfter, startTime)</div>
+<div class="line"><a id="l00764" name="l00764"></a><span class="lineno">  764</span> </div>
+<div class="line"><a id="l00765" name="l00765"></a><span class="lineno">  765</span>            backupCompletedMessage = &quot;Backup Completed Successfully&quot;</div>
+<div class="line"><a id="l00766" name="l00766"></a><span class="lineno">  766</span>            if diskUsageAfter.getFreeGB() &lt; (self._options.low/1E3):</div>
+<div class="line"><a id="l00767" name="l00767"></a><span class="lineno">  767</span>                backupCompletedMessage =  &quot;{}  !!! Low Disk Space !!!&quot;.format(backupCompletedMessage)</div>
 <div class="line"><a id="l00768" name="l00768"></a><span class="lineno">  768</span> </div>
-</div>
-<div class="foldopen" id="foldopen00769" data-start="" data-end="">
-<div class="line"><a id="l00769" name="l00769"></a><span class="lineno"><a class="line" href="classpbackup_1_1backup_1_1Backup.html#a64503d1b3a5a3539645229db8a9bfea1">  769</a></span>    def _getBackupSizeLogFile(self):</div>
-<div class="line"><a id="l00770" name="l00770"></a><span class="lineno">  770</span>        &quot;&quot;&quot;@return The name of the backup size log file.</div>
-<div class="line"><a id="l00771" name="l00771"></a><span class="lineno">  771</span>                   This was the old log file name and is no longer used. If this</div>
-<div class="line"><a id="l00772" name="l00772"></a><span class="lineno">  772</span>                   file is found then it is deleted.&quot;&quot;&quot;</div>
-<div class="line"><a id="l00773" name="l00773"></a><span class="lineno">  773</span>        return os.path.join(self._options.dest, Backup.BACKUP_SIZE_LOG_FILE)</div>
+<div class="line"><a id="l00769" name="l00769"></a><span class="lineno">  769</span>            self._uo.info(backupCompletedMessage)</div>
+<div class="line"><a id="l00770" name="l00770"></a><span class="lineno">  770</span>            self._notifyEmail(backupCompletedMessage, body=&quot;This backup has been stored in the {} path\n\n\n{}&quot;.format(backupDest, self._getBackupLog() ) )</div>
+<div class="line"><a id="l00771" name="l00771"></a><span class="lineno">  771</span> </div>
+<div class="line"><a id="l00772" name="l00772"></a><span class="lineno">  772</span>            #Purge old backups if required</div>
+<div class="line"><a id="l00773" name="l00773"></a><span class="lineno">  773</span>            self._purgeBackups()</div>
 <div class="line"><a id="l00774" name="l00774"></a><span class="lineno">  774</span> </div>
+<div class="line"><a id="l00775" name="l00775"></a><span class="lineno">  775</span>            self._uo.info(&quot;Backup success.&quot;)</div>
+<div class="line"><a id="l00776" name="l00776"></a><span class="lineno">  776</span> </div>
+<div class="line"><a id="l00777" name="l00777"></a><span class="lineno">  777</span>        finally:</div>
+<div class="line"><a id="l00778" name="l00778"></a><span class="lineno">  778</span>            #If the backup failed, create the record of the backup space used</div>
+<div class="line"><a id="l00779" name="l00779"></a><span class="lineno">  779</span>            if not diskUsageAfter:</div>
+<div class="line"><a id="l00780" name="l00780"></a><span class="lineno">  780</span>                diskUsageAfter = DiskUsage(self._options.dest)</div>
+<div class="line"><a id="l00781" name="l00781"></a><span class="lineno">  781</span>                self._saveDiskUsage(incompleteBackupDest, diskUsageBefore, diskUsageAfter, startTime)</div>
+<div class="line"><a id="l00782" name="l00782"></a><span class="lineno">  782</span> </div>
+<div class="line"><a id="l00783" name="l00783"></a><span class="lineno">  783</span>            #If required run the script after the backup complete (usefull for closing down LVM snapshots)</div>
+<div class="line"><a id="l00784" name="l00784"></a><span class="lineno">  784</span>            if self._options.post_script:</div>
+<div class="line"><a id="l00785" name="l00785"></a><span class="lineno">  785</span>                cmdOutput = check_output(self._options.post_script, shell=True, stderr=STDOUT)</div>
+<div class="line"><a id="l00786" name="l00786"></a><span class="lineno">  786</span>                self._uo.info(cmdOutput)</div>
+<div class="line"><a id="l00787" name="l00787"></a><span class="lineno">  787</span> </div>
+<div class="line"><a id="l00788" name="l00788"></a><span class="lineno">  788</span>            elapsedSeconds = time()-startTime</div>
+<div class="line"><a id="l00789" name="l00789"></a><span class="lineno">  789</span>            self._uo.error(f&quot;Took {elapsedSeconds} seconds to execute.&quot;)</div>
+<div class="line"><a id="l00790" name="l00790"></a><span class="lineno">  790</span> </div>
+<div class="line"><a id="l00791" name="l00791"></a><span class="lineno">  791</span> </div>
+<div class="line"><a id="l00792" name="l00792"></a><span class="lineno">  792</span> </div>
 </div>
-<div class="foldopen" id="foldopen00775" data-start="" data-end="">
-<div class="line"><a id="l00775" name="l00775"></a><span class="lineno"><a class="line" href="classpbackup_1_1backup_1_1Backup.html#a5b720f9904fdc98abda832bf43a3f407">  775</a></span>    def _getBackupLogFile(self):</div>
-<div class="line"><a id="l00776" name="l00776"></a><span class="lineno">  776</span>        &quot;&quot;&quot;@return The name of the backup log file.&quot;&quot;&quot;</div>
-<div class="line"><a id="l00777" name="l00777"></a><span class="lineno">  777</span>        return os.path.join(self._options.dest, Backup.BACKUP_LOG_FILE)</div>
-<div class="line"><a id="l00778" name="l00778"></a><span class="lineno">  778</span> </div>
+<div class="foldopen" id="foldopen00793" data-start="" data-end="">
+<div class="line"><a id="l00793" name="l00793"></a><span class="lineno"><a class="line" href="classpbackup_1_1backup_1_1Backup.html#a64503d1b3a5a3539645229db8a9bfea1">  793</a></span>    def _getBackupSizeLogFile(self):</div>
+<div class="line"><a id="l00794" name="l00794"></a><span class="lineno">  794</span>        &quot;&quot;&quot;@return The name of the backup size log file.</div>
+<div class="line"><a id="l00795" name="l00795"></a><span class="lineno">  795</span>                   This was the old log file name and is no longer used. If this</div>
+<div class="line"><a id="l00796" name="l00796"></a><span class="lineno">  796</span>                   file is found then it is deleted.&quot;&quot;&quot;</div>
+<div class="line"><a id="l00797" name="l00797"></a><span class="lineno">  797</span>        return os.path.join(self._options.dest, Backup.BACKUP_SIZE_LOG_FILE)</div>
+<div class="line"><a id="l00798" name="l00798"></a><span class="lineno">  798</span> </div>
 </div>
-<div class="foldopen" id="foldopen00779" data-start="" data-end="">
-<div class="line"><a id="l00779" name="l00779"></a><span class="lineno"><a class="line" href="classpbackup_1_1backup_1_1Backup.html#ab42772a7d1a68f7c3d532bf75c9e4227">  779</a></span>    def _saveDiskUsage(self, backupDest, diskUsageBefore, diskUsageAfter, startTime):</div>
-<div class="line"><a id="l00780" name="l00780"></a><span class="lineno">  780</span>        &quot;&quot;&quot;@brief Save the disk usage in the dest backup dir</div>
-<div class="line"><a id="l00781" name="l00781"></a><span class="lineno">  781</span>           @param backupDest The backup destination</div>
-<div class="line"><a id="l00782" name="l00782"></a><span class="lineno">  782</span>           @param diskUsageBefore The disk usage before the backup was started</div>
-<div class="line"><a id="l00783" name="l00783"></a><span class="lineno">  783</span>           @param diskUsageAfter The disk usage after the backup was completed or failed</div>
-<div class="line"><a id="l00784" name="l00784"></a><span class="lineno">  784</span>           @param startTime The start time of the backup in seconds</div>
-<div class="line"><a id="l00785" name="l00785"></a><span class="lineno">  785</span>           @return None&quot;&quot;&quot;</div>
-<div class="line"><a id="l00786" name="l00786"></a><span class="lineno">  786</span> </div>
-<div class="line"><a id="l00787" name="l00787"></a><span class="lineno">  787</span>        thisBackupName = backupDest.split(&#39;/&#39;).pop()</div>
-<div class="line"><a id="l00788" name="l00788"></a><span class="lineno">  788</span> </div>
-<div class="line"><a id="l00789" name="l00789"></a><span class="lineno">  789</span>        #We calc the backup size as the drop in free space wheil the backup was running.</div>
-<div class="line"><a id="l00790" name="l00790"></a><span class="lineno">  790</span>        #Other processes could be using disk space while the backup is running but</div>
-<div class="line"><a id="l00791" name="l00791"></a><span class="lineno">  791</span>        #for the moment this is the assumption made.</div>
-<div class="line"><a id="l00792" name="l00792"></a><span class="lineno">  792</span>        backupSizeGB = diskUsageBefore.getFreeGB()-diskUsageAfter.getFreeGB()</div>
-<div class="line"><a id="l00793" name="l00793"></a><span class="lineno">  793</span>        timeStr = time.strftime(&quot;%H:%M:%S&quot;, time.gmtime(time.time()-startTime) )</div>
-<div class="line"><a id="l00794" name="l00794"></a><span class="lineno">  794</span>        backupDetails = &quot;Disk: Free {:.1f} GB, Used {:.1f} GB, Backup Size {:.1f} GB, Took {}&quot;.format( diskUsageAfter.getFreeGB(), diskUsageAfter.getUsedGB(), backupSizeGB, timeStr)</div>
-<div class="line"><a id="l00795" name="l00795"></a><span class="lineno">  795</span>        line = &quot;{}: {}&quot;.format(thisBackupName, backupDetails)</div>
-<div class="line"><a id="l00796" name="l00796"></a><span class="lineno">  796</span> </div>
-<div class="line"><a id="l00797" name="l00797"></a><span class="lineno">  797</span>        backupSizeRecordLogFile = self._getBackupLogFile()</div>
-<div class="line"><a id="l00798" name="l00798"></a><span class="lineno">  798</span>        if os.path.isfile(backupSizeRecordLogFile):</div>
-<div class="line"><a id="l00799" name="l00799"></a><span class="lineno">  799</span>            fd = open(backupSizeRecordLogFile, &#39;a&#39;)</div>
-<div class="line"><a id="l00800" name="l00800"></a><span class="lineno">  800</span>        else:</div>
-<div class="line"><a id="l00801" name="l00801"></a><span class="lineno">  801</span>            fd = open(backupSizeRecordLogFile, &#39;w&#39;)</div>
-<div class="line"><a id="l00802" name="l00802"></a><span class="lineno">  802</span>        fd.write(&quot;{}\n&quot;.format(line) )</div>
-<div class="line"><a id="l00803" name="l00803"></a><span class="lineno">  803</span>        fd.close()</div>
-<div class="line"><a id="l00804" name="l00804"></a><span class="lineno">  804</span>        self._uo.info(line)</div>
-<div class="line"><a id="l00805" name="l00805"></a><span class="lineno">  805</span> </div>
+<div class="foldopen" id="foldopen00799" data-start="" data-end="">
+<div class="line"><a id="l00799" name="l00799"></a><span class="lineno"><a class="line" href="classpbackup_1_1backup_1_1Backup.html#a5b720f9904fdc98abda832bf43a3f407">  799</a></span>    def _getBackupLogFile(self):</div>
+<div class="line"><a id="l00800" name="l00800"></a><span class="lineno">  800</span>        &quot;&quot;&quot;@return The name of the backup log file.&quot;&quot;&quot;</div>
+<div class="line"><a id="l00801" name="l00801"></a><span class="lineno">  801</span>        return os.path.join(self._options.dest, Backup.BACKUP_LOG_FILE)</div>
+<div class="line"><a id="l00802" name="l00802"></a><span class="lineno">  802</span> </div>
 </div>
-<div class="foldopen" id="foldopen00806" data-start="" data-end="">
-<div class="line"><a id="l00806" name="l00806"></a><span class="lineno"><a class="line" href="classpbackup_1_1backup_1_1Backup.html#a48f47d646fa775bab8d426053cc7a2aa">  806</a></span>    def _getBackupLog(self):</div>
-<div class="line"><a id="l00807" name="l00807"></a><span class="lineno">  807</span>        &quot;&quot;&quot;@brief Get the size of the backup over time</div>
-<div class="line"><a id="l00808" name="l00808"></a><span class="lineno">  808</span>           @return the above&quot;&quot;&quot;</div>
-<div class="line"><a id="l00809" name="l00809"></a><span class="lineno">  809</span>        lines = []</div>
-<div class="line"><a id="l00810" name="l00810"></a><span class="lineno">  810</span>        backupSizeRecordLogFile = self._getBackupLogFile()</div>
-<div class="line"><a id="l00811" name="l00811"></a><span class="lineno">  811</span>        if os.path.isfile(backupSizeRecordLogFile):</div>
-<div class="line"><a id="l00812" name="l00812"></a><span class="lineno">  812</span>            fd = open(backupSizeRecordLogFile, &#39;r&#39;)</div>
-<div class="line"><a id="l00813" name="l00813"></a><span class="lineno">  813</span>            lines = fd.readlines()</div>
-<div class="line"><a id="l00814" name="l00814"></a><span class="lineno">  814</span>            fd.close()</div>
-<div class="line"><a id="l00815" name="l00815"></a><span class="lineno">  815</span> </div>
-<div class="line"><a id="l00816" name="l00816"></a><span class="lineno">  816</span>        return &quot;&quot;.join(lines)</div>
-<div class="line"><a id="l00817" name="l00817"></a><span class="lineno">  817</span> </div>
-</div>
-<div class="foldopen" id="foldopen00818" data-start="" data-end="">
-<div class="line"><a id="l00818" name="l00818"></a><span class="lineno"><a class="line" href="classpbackup_1_1backup_1_1Backup.html#aa72da7562efc99ad7ec5e348e05fdd27">  818</a></span>    def _saveConfig(self):</div>
-<div class="line"><a id="l00819" name="l00819"></a><span class="lineno">  819</span>        &quot;&quot;&quot;@brief Save all the command line options to a config file&quot;&quot;&quot;</div>
-<div class="line"><a id="l00820" name="l00820"></a><span class="lineno">  820</span>        if self._options.save_config:</div>
-<div class="line"><a id="l00821" name="l00821"></a><span class="lineno">  821</span>            pickle.dump( self._options, open(self._options.save_config, &quot;wb&quot;) )</div>
-<div class="line"><a id="l00822" name="l00822"></a><span class="lineno">  822</span>            self._uo.info(&quot;Saved command line options to {}&quot;.format(self._options.save_config) )</div>
-<div class="line"><a id="l00823" name="l00823"></a><span class="lineno">  823</span> </div>
-</div>
-<div class="foldopen" id="foldopen00824" data-start="" data-end="">
-<div class="line"><a id="l00824" name="l00824"></a><span class="lineno"><a class="line" href="classpbackup_1_1backup_1_1Backup.html#a708a3b62ae21b214a7149c863b094fe0">  824</a></span>    def _loadConfig(self):</div>
-<div class="line"><a id="l00825" name="l00825"></a><span class="lineno">  825</span>        &quot;&quot;&quot;@brief Load the command line options saved previously to a config file&quot;&quot;&quot;</div>
-<div class="line"><a id="l00826" name="l00826"></a><span class="lineno">  826</span>        if self._options.load_config:</div>
-<div class="line"><a id="l00827" name="l00827"></a><span class="lineno">  827</span>            self._options = pickle.load( open(self._options.load_config, &quot;rb&quot;) )</div>
-<div class="line"><a id="l00828" name="l00828"></a><span class="lineno">  828</span>            self._uo.info(&quot;Loaded command line options from {}&quot;.format(self._options.load_config) )</div>
+<div class="foldopen" id="foldopen00803" data-start="" data-end="">
+<div class="line"><a id="l00803" name="l00803"></a><span class="lineno"><a class="line" href="classpbackup_1_1backup_1_1Backup.html#ab42772a7d1a68f7c3d532bf75c9e4227">  803</a></span>    def _saveDiskUsage(self, backupDest, diskUsageBefore, diskUsageAfter, startTime):</div>
+<div class="line"><a id="l00804" name="l00804"></a><span class="lineno">  804</span>        &quot;&quot;&quot;@brief Save the disk usage in the dest backup dir</div>
+<div class="line"><a id="l00805" name="l00805"></a><span class="lineno">  805</span>           @param backupDest The backup destination</div>
+<div class="line"><a id="l00806" name="l00806"></a><span class="lineno">  806</span>           @param diskUsageBefore The disk usage before the backup was started</div>
+<div class="line"><a id="l00807" name="l00807"></a><span class="lineno">  807</span>           @param diskUsageAfter The disk usage after the backup was completed or failed</div>
+<div class="line"><a id="l00808" name="l00808"></a><span class="lineno">  808</span>           @param startTime The start time of the backup in seconds</div>
+<div class="line"><a id="l00809" name="l00809"></a><span class="lineno">  809</span>           @return None&quot;&quot;&quot;</div>
+<div class="line"><a id="l00810" name="l00810"></a><span class="lineno">  810</span> </div>
+<div class="line"><a id="l00811" name="l00811"></a><span class="lineno">  811</span>        thisBackupName = backupDest.split(&#39;/&#39;).pop()</div>
+<div class="line"><a id="l00812" name="l00812"></a><span class="lineno">  812</span> </div>
+<div class="line"><a id="l00813" name="l00813"></a><span class="lineno">  813</span>        #We calc the backup size as the drop in free space wheil the backup was running.</div>
+<div class="line"><a id="l00814" name="l00814"></a><span class="lineno">  814</span>        #Other processes could be using disk space while the backup is running but</div>
+<div class="line"><a id="l00815" name="l00815"></a><span class="lineno">  815</span>        #for the moment this is the assumption made.</div>
+<div class="line"><a id="l00816" name="l00816"></a><span class="lineno">  816</span>        backupSizeGB = diskUsageBefore.getFreeGB()-diskUsageAfter.getFreeGB()</div>
+<div class="line"><a id="l00817" name="l00817"></a><span class="lineno">  817</span>        timeStr = time.strftime(&quot;%H:%M:%S&quot;, time.gmtime(time.time()-startTime) )</div>
+<div class="line"><a id="l00818" name="l00818"></a><span class="lineno">  818</span>        backupDetails = &quot;Disk: Free {:.1f} GB, Used {:.1f} GB, Backup Size {:.1f} GB, Took {}&quot;.format( diskUsageAfter.getFreeGB(), diskUsageAfter.getUsedGB(), backupSizeGB, timeStr)</div>
+<div class="line"><a id="l00819" name="l00819"></a><span class="lineno">  819</span>        line = &quot;{}: {}&quot;.format(thisBackupName, backupDetails)</div>
+<div class="line"><a id="l00820" name="l00820"></a><span class="lineno">  820</span> </div>
+<div class="line"><a id="l00821" name="l00821"></a><span class="lineno">  821</span>        backupSizeRecordLogFile = self._getBackupLogFile()</div>
+<div class="line"><a id="l00822" name="l00822"></a><span class="lineno">  822</span>        if os.path.isfile(backupSizeRecordLogFile):</div>
+<div class="line"><a id="l00823" name="l00823"></a><span class="lineno">  823</span>            fd = open(backupSizeRecordLogFile, &#39;a&#39;)</div>
+<div class="line"><a id="l00824" name="l00824"></a><span class="lineno">  824</span>        else:</div>
+<div class="line"><a id="l00825" name="l00825"></a><span class="lineno">  825</span>            fd = open(backupSizeRecordLogFile, &#39;w&#39;)</div>
+<div class="line"><a id="l00826" name="l00826"></a><span class="lineno">  826</span>        fd.write(&quot;{}\n&quot;.format(line) )</div>
+<div class="line"><a id="l00827" name="l00827"></a><span class="lineno">  827</span>        fd.close()</div>
+<div class="line"><a id="l00828" name="l00828"></a><span class="lineno">  828</span>        self._uo.info(line)</div>
 <div class="line"><a id="l00829" name="l00829"></a><span class="lineno">  829</span> </div>
 </div>
 <div class="foldopen" id="foldopen00830" data-start="" data-end="">
-<div class="line"><a id="l00830" name="l00830"></a><span class="lineno"><a class="line" href="classpbackup_1_1backup_1_1Backup.html#a5e0a55771212ebe03e437ba437953c8f">  830</a></span>    def _runChecks(self):</div>
-<div class="line"><a id="l00831" name="l00831"></a><span class="lineno">  831</span>        &quot;&quot;&quot;@brief Check that the rsync program is present on the local and remote (if remote ssh connection defined.&quot;&quot;&quot;</div>
-<div class="line"><a id="l00832" name="l00832"></a><span class="lineno">  832</span>        self._uo.info(&quot;Performing initial checks...&quot;)</div>
-<div class="line"><a id="l00833" name="l00833"></a><span class="lineno">  833</span> </div>
-<div class="line"><a id="l00834" name="l00834"></a><span class="lineno">  834</span>        if not os.path.isfile(Backup.RSYNC_CMD):</div>
-<div class="line"><a id="l00835" name="l00835"></a><span class="lineno">  835</span>            raise Exception(&quot;{} file not found on the local machine. Please install rsync and try again.&quot;.format(Backup.RSYNC_CMD))</div>
-<div class="line"><a id="l00836" name="l00836"></a><span class="lineno">  836</span> </div>
-<div class="line"><a id="l00837" name="l00837"></a><span class="lineno">  837</span>        self._uo.info(&quot;{} is installed locally.&quot;.format(Backup.RSYNC_CMD))</div>
-<div class="line"><a id="l00838" name="l00838"></a><span class="lineno">  838</span> </div>
-<div class="line"><a id="l00839" name="l00839"></a><span class="lineno">  839</span>        #If the backup source is on a remote machine.</div>
-<div class="line"><a id="l00840" name="l00840"></a><span class="lineno">  840</span>        if self._options.ssh:</div>
-<div class="line"><a id="l00841" name="l00841"></a><span class="lineno">  841</span>            if not os.path.isfile(Backup.SSH_CMD):</div>
-<div class="line"><a id="l00842" name="l00842"></a><span class="lineno">  842</span>                raise Exception(&quot;{} file not found on the local machine. Please install ssh and try again.&quot;.format(Backup.SSH_CMD))</div>
-<div class="line"><a id="l00843" name="l00843"></a><span class="lineno">  843</span>            self._uo.info(&quot;{} is installed locally.&quot;.format(Backup.SSH_CMD))</div>
-<div class="line"><a id="l00844" name="l00844"></a><span class="lineno">  844</span>            try:</div>
-<div class="line"><a id="l00845" name="l00845"></a><span class="lineno">  845</span>                src, port = self._getSrc()</div>
-<div class="line"><a id="l00846" name="l00846"></a><span class="lineno">  846</span>                self._uo.info(&quot;Checked ssh connection to remote source machine ({}).&quot;.format(self._options.ssh))</div>
-<div class="line"><a id="l00847" name="l00847"></a><span class="lineno">  847</span>            except:</div>
-<div class="line"><a id="l00848" name="l00848"></a><span class="lineno">  848</span>                raise Exception(&quot;Failed to connect to {} ssh server.&quot;.format(self._options.ssh))</div>
-<div class="line"><a id="l00849" name="l00849"></a><span class="lineno">  849</span> </div>
-<div class="line"><a id="l00850" name="l00850"></a><span class="lineno">  850</span>            try:</div>
-<div class="line"><a id="l00851" name="l00851"></a><span class="lineno">  851</span>                src, port = self._getSrc()</div>
-<div class="line"><a id="l00852" name="l00852"></a><span class="lineno">  852</span>                self._uo.info(&quot;{} is installed on remote source machine ({}).&quot;.format(Backup.RSYNC_CMD, self._options.ssh))</div>
+<div class="line"><a id="l00830" name="l00830"></a><span class="lineno"><a class="line" href="classpbackup_1_1backup_1_1Backup.html#a48f47d646fa775bab8d426053cc7a2aa">  830</a></span>    def _getBackupLog(self):</div>
+<div class="line"><a id="l00831" name="l00831"></a><span class="lineno">  831</span>        &quot;&quot;&quot;@brief Get the size of the backup over time</div>
+<div class="line"><a id="l00832" name="l00832"></a><span class="lineno">  832</span>           @return the above&quot;&quot;&quot;</div>
+<div class="line"><a id="l00833" name="l00833"></a><span class="lineno">  833</span>        lines = []</div>
+<div class="line"><a id="l00834" name="l00834"></a><span class="lineno">  834</span>        backupSizeRecordLogFile = self._getBackupLogFile()</div>
+<div class="line"><a id="l00835" name="l00835"></a><span class="lineno">  835</span>        if os.path.isfile(backupSizeRecordLogFile):</div>
+<div class="line"><a id="l00836" name="l00836"></a><span class="lineno">  836</span>            fd = open(backupSizeRecordLogFile, &#39;r&#39;)</div>
+<div class="line"><a id="l00837" name="l00837"></a><span class="lineno">  837</span>            lines = fd.readlines()</div>
+<div class="line"><a id="l00838" name="l00838"></a><span class="lineno">  838</span>            fd.close()</div>
+<div class="line"><a id="l00839" name="l00839"></a><span class="lineno">  839</span> </div>
+<div class="line"><a id="l00840" name="l00840"></a><span class="lineno">  840</span>        return &quot;&quot;.join(lines)</div>
+<div class="line"><a id="l00841" name="l00841"></a><span class="lineno">  841</span> </div>
+</div>
+<div class="foldopen" id="foldopen00842" data-start="" data-end="">
+<div class="line"><a id="l00842" name="l00842"></a><span class="lineno"><a class="line" href="classpbackup_1_1backup_1_1Backup.html#aa72da7562efc99ad7ec5e348e05fdd27">  842</a></span>    def _saveConfig(self):</div>
+<div class="line"><a id="l00843" name="l00843"></a><span class="lineno">  843</span>        &quot;&quot;&quot;@brief Save all the command line options to a config file&quot;&quot;&quot;</div>
+<div class="line"><a id="l00844" name="l00844"></a><span class="lineno">  844</span>        if self._options.save_config:</div>
+<div class="line"><a id="l00845" name="l00845"></a><span class="lineno">  845</span>            pickle.dump( self._options, open(self._options.save_config, &quot;wb&quot;) )</div>
+<div class="line"><a id="l00846" name="l00846"></a><span class="lineno">  846</span>            self._uo.info(&quot;Saved command line options to {}&quot;.format(self._options.save_config) )</div>
+<div class="line"><a id="l00847" name="l00847"></a><span class="lineno">  847</span> </div>
+</div>
+<div class="foldopen" id="foldopen00848" data-start="" data-end="">
+<div class="line"><a id="l00848" name="l00848"></a><span class="lineno"><a class="line" href="classpbackup_1_1backup_1_1Backup.html#a708a3b62ae21b214a7149c863b094fe0">  848</a></span>    def _loadConfig(self):</div>
+<div class="line"><a id="l00849" name="l00849"></a><span class="lineno">  849</span>        &quot;&quot;&quot;@brief Load the command line options saved previously to a config file&quot;&quot;&quot;</div>
+<div class="line"><a id="l00850" name="l00850"></a><span class="lineno">  850</span>        if self._options.load_config:</div>
+<div class="line"><a id="l00851" name="l00851"></a><span class="lineno">  851</span>            self._options = pickle.load( open(self._options.load_config, &quot;rb&quot;) )</div>
+<div class="line"><a id="l00852" name="l00852"></a><span class="lineno">  852</span>            self._uo.info(&quot;Loaded command line options from {}&quot;.format(self._options.load_config) )</div>
 <div class="line"><a id="l00853" name="l00853"></a><span class="lineno">  853</span> </div>
-<div class="line"><a id="l00854" name="l00854"></a><span class="lineno">  854</span>            except:</div>
-<div class="line"><a id="l00855" name="l00855"></a><span class="lineno">  855</span>                raise Exception(&quot;rsync is not installed on the ssh server ({}). Please install it and try again.&quot;.format(self._options.ssh))</div>
-<div class="line"><a id="l00856" name="l00856"></a><span class="lineno">  856</span> </div>
+</div>
+<div class="foldopen" id="foldopen00854" data-start="" data-end="">
+<div class="line"><a id="l00854" name="l00854"></a><span class="lineno"><a class="line" href="classpbackup_1_1backup_1_1Backup.html#a5e0a55771212ebe03e437ba437953c8f">  854</a></span>    def _runChecks(self):</div>
+<div class="line"><a id="l00855" name="l00855"></a><span class="lineno">  855</span>        &quot;&quot;&quot;@brief Check that the rsync program is present on the local and remote (if remote ssh connection defined.&quot;&quot;&quot;</div>
+<div class="line"><a id="l00856" name="l00856"></a><span class="lineno">  856</span>        self._uo.info(&quot;Performing initial checks...&quot;)</div>
 <div class="line"><a id="l00857" name="l00857"></a><span class="lineno">  857</span> </div>
-</div>
-<div class="foldopen" id="foldopen00858" data-start="" data-end="">
-<div class="line"><a id="l00858" name="l00858"></a><span class="lineno"><a class="line" href="classpbackup_1_1backup_1_1Backup.html#a53c7e49e704028f4ab12031d58b807b0">  858</a></span>    def execute(self):</div>
-<div class="line"><a id="l00859" name="l00859"></a><span class="lineno">  859</span>        &quot;&quot;&quot;@brief Called to execute the backup process&quot;&quot;&quot;</div>
-<div class="line"><a id="l00860" name="l00860"></a><span class="lineno">  860</span>        self._runChecks()</div>
-<div class="line"><a id="l00861" name="l00861"></a><span class="lineno">  861</span> </div>
-<div class="line"><a id="l00862" name="l00862"></a><span class="lineno">  862</span>        try:</div>
-<div class="line"><a id="l00863" name="l00863"></a><span class="lineno">  863</span> </div>
-<div class="line"><a id="l00864" name="l00864"></a><span class="lineno">  864</span>           self._doBackup()</div>
-<div class="line"><a id="l00865" name="l00865"></a><span class="lineno">  865</span> </div>
-<div class="line"><a id="l00866" name="l00866"></a><span class="lineno">  866</span>           self._saveConfig()</div>
-<div class="line"><a id="l00867" name="l00867"></a><span class="lineno">  867</span> </div>
-<div class="line"><a id="l00868" name="l00868"></a><span class="lineno">  868</span>        except Exception as e:</div>
-<div class="line"><a id="l00869" name="l00869"></a><span class="lineno">  869</span>            if self._options.email_server:</div>
-<div class="line"><a id="l00870" name="l00870"></a><span class="lineno">  870</span>                try:</div>
-<div class="line"><a id="l00871" name="l00871"></a><span class="lineno">  871</span>                    eTextList=[]</div>
-<div class="line"><a id="l00872" name="l00872"></a><span class="lineno">  872</span>                    #If we have some output from a check_output cmd</div>
-<div class="line"><a id="l00873" name="l00873"></a><span class="lineno">  873</span>                    if hasattr(e, &#39;output&#39;):</div>
-<div class="line"><a id="l00874" name="l00874"></a><span class="lineno">  874</span>                        #Include this in the error text</div>
-<div class="line"><a id="l00875" name="l00875"></a><span class="lineno">  875</span>                        eTextList.append(e.output)</div>
-<div class="line"><a id="l00876" name="l00876"></a><span class="lineno">  876</span>                    eTextList.append( str(e) )</div>
-<div class="line"><a id="l00877" name="l00877"></a><span class="lineno">  877</span>                    self._notifyEmail(&quot;Backup Failed&quot;, body = &quot;{}\n\n\n{}&quot;.format(&quot;\n&quot;.join(eTextList), self._getBackupLog()) )</div>
-<div class="line"><a id="l00878" name="l00878"></a><span class="lineno">  878</span>                except:</div>
-<div class="line"><a id="l00879" name="l00879"></a><span class="lineno">  879</span>                    pass</div>
+<div class="line"><a id="l00858" name="l00858"></a><span class="lineno">  858</span>        if not os.path.isfile(Backup.RSYNC_CMD):</div>
+<div class="line"><a id="l00859" name="l00859"></a><span class="lineno">  859</span>            raise Exception(&quot;{} file not found on the local machine. Please install rsync and try again.&quot;.format(Backup.RSYNC_CMD))</div>
+<div class="line"><a id="l00860" name="l00860"></a><span class="lineno">  860</span> </div>
+<div class="line"><a id="l00861" name="l00861"></a><span class="lineno">  861</span>        self._uo.info(&quot;{} is installed locally.&quot;.format(Backup.RSYNC_CMD))</div>
+<div class="line"><a id="l00862" name="l00862"></a><span class="lineno">  862</span> </div>
+<div class="line"><a id="l00863" name="l00863"></a><span class="lineno">  863</span>        #If the backup source is on a remote machine.</div>
+<div class="line"><a id="l00864" name="l00864"></a><span class="lineno">  864</span>        if self._options.ssh:</div>
+<div class="line"><a id="l00865" name="l00865"></a><span class="lineno">  865</span>            if not os.path.isfile(Backup.SSH_CMD):</div>
+<div class="line"><a id="l00866" name="l00866"></a><span class="lineno">  866</span>                raise Exception(&quot;{} file not found on the local machine. Please install ssh and try again.&quot;.format(Backup.SSH_CMD))</div>
+<div class="line"><a id="l00867" name="l00867"></a><span class="lineno">  867</span>            self._uo.info(&quot;{} is installed locally.&quot;.format(Backup.SSH_CMD))</div>
+<div class="line"><a id="l00868" name="l00868"></a><span class="lineno">  868</span>            try:</div>
+<div class="line"><a id="l00869" name="l00869"></a><span class="lineno">  869</span>                src, port = self._getSrc()</div>
+<div class="line"><a id="l00870" name="l00870"></a><span class="lineno">  870</span>                self._uo.info(&quot;Checked ssh connection to remote source machine ({}).&quot;.format(self._options.ssh))</div>
+<div class="line"><a id="l00871" name="l00871"></a><span class="lineno">  871</span>            except:</div>
+<div class="line"><a id="l00872" name="l00872"></a><span class="lineno">  872</span>                raise Exception(&quot;Failed to connect to {} ssh server.&quot;.format(self._options.ssh))</div>
+<div class="line"><a id="l00873" name="l00873"></a><span class="lineno">  873</span> </div>
+<div class="line"><a id="l00874" name="l00874"></a><span class="lineno">  874</span>            try:</div>
+<div class="line"><a id="l00875" name="l00875"></a><span class="lineno">  875</span>                src, port = self._getSrc()</div>
+<div class="line"><a id="l00876" name="l00876"></a><span class="lineno">  876</span>                self._uo.info(&quot;{} is installed on remote source machine ({}).&quot;.format(Backup.RSYNC_CMD, self._options.ssh))</div>
+<div class="line"><a id="l00877" name="l00877"></a><span class="lineno">  877</span> </div>
+<div class="line"><a id="l00878" name="l00878"></a><span class="lineno">  878</span>            except:</div>
+<div class="line"><a id="l00879" name="l00879"></a><span class="lineno">  879</span>                raise Exception(&quot;rsync is not installed on the ssh server ({}). Please install it and try again.&quot;.format(self._options.ssh))</div>
 <div class="line"><a id="l00880" name="l00880"></a><span class="lineno">  880</span> </div>
-<div class="line"><a id="l00881" name="l00881"></a><span class="lineno">  881</span>            raise</div>
-<div class="line"><a id="l00882" name="l00882"></a><span class="lineno">  882</span> </div>
+<div class="line"><a id="l00881" name="l00881"></a><span class="lineno">  881</span> </div>
 </div>
-<div class="foldopen" id="foldopen00883" data-start="" data-end="">
-<div class="line"><a id="l00883" name="l00883"></a><span class="lineno"><a class="line" href="classpbackup_1_1backup_1_1Backup.html#aa6e3aa1601ccff4b0f17a38b814e5561">  883</a></span>    def testEmail(self):</div>
-<div class="line"><a id="l00884" name="l00884"></a><span class="lineno">  884</span>        &quot;&quot;&quot;@brief Send a test email&quot;&quot;&quot;</div>
-<div class="line"><a id="l00885" name="l00885"></a><span class="lineno">  885</span>        self._notifyEmail(&quot;Backup Email Test&quot;, body = &quot;TESTING BACKUP EMAIL SEND\n\n\n&quot; )</div>
-<div class="line"><a id="l00886" name="l00886"></a><span class="lineno">  886</span> </div>
-</div>
-</div>
-<div class="foldopen" id="foldopen00887" data-start="" data-end="">
-<div class="line"><a id="l00887" name="l00887"></a><span class="lineno"><a class="line" href="namespacepbackup_1_1backup.html#a51af30a60f9f02777c6396b8247e356f">  887</a></span>def main():</div>
-<div class="line"><a id="l00888" name="l00888"></a><span class="lineno">  888</span>    uo = UO()</div>
+<div class="foldopen" id="foldopen00882" data-start="" data-end="">
+<div class="line"><a id="l00882" name="l00882"></a><span class="lineno"><a class="line" href="classpbackup_1_1backup_1_1Backup.html#a53c7e49e704028f4ab12031d58b807b0">  882</a></span>    def execute(self):</div>
+<div class="line"><a id="l00883" name="l00883"></a><span class="lineno">  883</span>        &quot;&quot;&quot;@brief Called to execute the backup process&quot;&quot;&quot;</div>
+<div class="line"><a id="l00884" name="l00884"></a><span class="lineno">  884</span>        self._runChecks()</div>
+<div class="line"><a id="l00885" name="l00885"></a><span class="lineno">  885</span> </div>
+<div class="line"><a id="l00886" name="l00886"></a><span class="lineno">  886</span>        try:</div>
+<div class="line"><a id="l00887" name="l00887"></a><span class="lineno">  887</span> </div>
+<div class="line"><a id="l00888" name="l00888"></a><span class="lineno">  888</span>           self._doBackup()</div>
 <div class="line"><a id="l00889" name="l00889"></a><span class="lineno">  889</span> </div>
-<div class="line"><a id="l00890" name="l00890"></a><span class="lineno">  890</span>    opts=OptionParser(usage=&quot;\n\</div>
-<div class="line"><a id="l00891" name="l00891"></a><span class="lineno">  891</span>     A command line backup tool that provides full and incremental backups using hard links\n\</div>
-<div class="line"><a id="l00892" name="l00892"></a><span class="lineno">  892</span>     so that folders with a complete backup history are available using a minimum of storage space.\n\</div>
-<div class="line"><a id="l00893" name="l00893"></a><span class="lineno">  893</span>     Rsync (/usr/bin/rsync) must be installed (installed by default on most Linux distributions).&quot;)</div>
-<div class="line"><a id="l00894" name="l00894"></a><span class="lineno">  894</span> </div>
-<div class="line"><a id="l00895" name="l00895"></a><span class="lineno">  895</span>    opts.add_option(&quot;--src&quot;,                    help=&quot;Followed by the absolute path of the path to backup (required). This may include any regular expressions that can be used on the rsync src. See rsync documentation for more details of this.&quot;, default=None)</div>
-<div class="line"><a id="l00896" name="l00896"></a><span class="lineno">  896</span>    opts.add_option(&quot;--dest&quot;,                   help=&quot;Followed by the absolute path of the path to hold the backups. (required)&quot;, default=None)</div>
-<div class="line"><a id="l00897" name="l00897"></a><span class="lineno">  897</span>    opts.add_option(&quot;--src_exclude&quot;,            help=&quot;Followed by a comma separated list of exclude patterns to be passed to rsync in order to exclude files in the src path from the backup (optional). See rsync documentation for more details of this.&quot;, default=None)</div>
-<div class="line"><a id="l00898" name="l00898"></a><span class="lineno">  898</span>    opts.add_option(&quot;--ssh&quot;,                    help=&quot;Followed by the src ssh host address (optional). If supplied this can include the username, E.G username@myserver (if no username is supplied the current username will be used). This may also include the SSH port number E.G username@myserver:22&quot;, default=None)</div>
-<div class="line"><a id="l00899" name="l00899"></a><span class="lineno">  899</span>    opts.add_option(&quot;--log&quot;,                    help=&quot;Followed by the absolute path of the backup log file (optional).&quot;, default=None)</div>
-<div class="line"><a id="l00900" name="l00900"></a><span class="lineno">  900</span>    opts.add_option(&quot;--max_full&quot;,               help=&quot;Followed by the maximum number of full backups to store (default=4).&quot;, type=&quot;int&quot;, default=4)</div>
-<div class="line"><a id="l00901" name="l00901"></a><span class="lineno">  901</span>    opts.add_option(&quot;--max_inc&quot;,                help=&quot;Followed by the maximum number of incremental backups to store (default=92).&quot;, type=&quot;int&quot;, default=92)</div>
-<div class="line"><a id="l00902" name="l00902"></a><span class="lineno">  902</span> </div>
-<div class="line"><a id="l00903" name="l00903"></a><span class="lineno">  903</span>    opts.add_option(&quot;--email_server&quot;,           help=&quot;Followed by the email (SMTP) server for notification of backup progress (optional). The SMTP server address can include the port number of the SMTP server (E.G smtp.gmail.com:587).&quot;, default=None)</div>
-<div class="line"><a id="l00904" name="l00904"></a><span class="lineno">  904</span>    opts.add_option(&quot;--email_list&quot;,             help=&quot;Followed by a comma separated list of email addresses to be sent email notifications of backup progress (optional).&quot;, default=None)</div>
-<div class="line"><a id="l00905" name="l00905"></a><span class="lineno">  905</span>    opts.add_option(&quot;--email_username&quot;,         help=&quot;Followed by the email username for notification of backup progress (optional).&quot;, default=None)</div>
-<div class="line"><a id="l00906" name="l00906"></a><span class="lineno">  906</span>    opts.add_option(&quot;--email_password&quot;,         help=&quot;Followed by the email password for notification of backup progress (optional).&quot;, default=None)</div>
-<div class="line"><a id="l00907" name="l00907"></a><span class="lineno">  907</span>    opts.add_option(&quot;--test_email&quot;,             help=&quot;Send a test email to check the email works.&quot;, action=&quot;store_true&quot;)</div>
-<div class="line"><a id="l00908" name="l00908"></a><span class="lineno">  908</span> </div>
-<div class="line"><a id="l00909" name="l00909"></a><span class="lineno">  909</span>    opts.add_option(&quot;--pre_script&quot;,             help=&quot;Followed by the absolute path of a script to be executed before the backup (optional). This is usefull is LVM snapshots are used. The script can be used to create the snapshot .&quot;, default=None)</div>
-<div class="line"><a id="l00910" name="l00910"></a><span class="lineno">  910</span>    opts.add_option(&quot;--post_script&quot;,            help=&quot;Followed by the absolute path of a script to be executed after the backup (optional). This is usefull is LVM snapshots are used. The script can be used to remove the snapshot once the backup is complete.&quot;, default=None)</div>
-<div class="line"><a id="l00911" name="l00911"></a><span class="lineno">  911</span> </div>
-<div class="line"><a id="l00912" name="l00912"></a><span class="lineno">  912</span>    opts.add_option(&quot;--save_config&quot;,            help=&quot;Followed by the config file to save the current command line options into.&quot;, default=None)</div>
-<div class="line"><a id="l00913" name="l00913"></a><span class="lineno">  913</span>    opts.add_option(&quot;--load_config&quot;,            help=&quot;Followed by the config file to load all command line options from. If this option is used then no other command line options are required as they will all be loaded from the config file. This allows for a simpler command line once you&#39;ve got the backup you&#39;re after.&quot;, default=None)</div>
-<div class="line"><a id="l00914" name="l00914"></a><span class="lineno">  914</span>    opts.add_option(&quot;--show_cmd_line&quot;,          help=&quot;Show the command line (excluding --save_config, --load_config --list_options) and exit. This is useful if the --load_config option is used and you wish to find the original command line.&quot;, action=&quot;store_true&quot;, default=False)</div>
-<div class="line"><a id="l00915" name="l00915"></a><span class="lineno">  915</span>    opts.add_option(&quot;--max_daily_backups&quot;,      help=&quot;Followed by the maximum number of backups that can be taken in one day (default = 5). This ensures that no matter how many times backup is executed, the backups stored will be limited.&quot;, type=&quot;int&quot;, default=5)</div>
-<div class="line"><a id="l00916" name="l00916"></a><span class="lineno">  916</span> </div>
-<div class="line"><a id="l00917" name="l00917"></a><span class="lineno">  917</span>    opts.add_option(&quot;--disable_create_dest&quot;,    help=&quot;Disable the creation of the dest path if it does not exist. By default the dest path is created if it does not exist&quot;, action=&quot;store_true&quot;, default=False)</div>
-<div class="line"><a id="l00918" name="l00918"></a><span class="lineno">  918</span> </div>
-<div class="line"><a id="l00919" name="l00919"></a><span class="lineno">  919</span>    opts.add_option(&quot;--low&quot;,                    help=&quot;Low disk space threshold (MB). If the destination disk space drops below this then backup complete email messages will include a low disk space warning (default = 5000 MB).&quot;, type=&quot;int&quot;, default=5000)</div>
-<div class="line"><a id="l00920" name="l00920"></a><span class="lineno">  920</span> </div>
-<div class="line"><a id="l00921" name="l00921"></a><span class="lineno">  921</span>    opts.add_option(&quot;--monthly_full&quot;,           help=&quot;Perform a full backup on the first day of every month. This overrides the max_inc argument.&quot;, action=&quot;store_true&quot;, default=False)</div>
-<div class="line"><a id="l00922" name="l00922"></a><span class="lineno">  922</span> </div>
-<div class="line"><a id="l00923" name="l00923"></a><span class="lineno">  923</span>    opts.add_option(&quot;--debug&quot;,                  help=&quot;Enable debugging.&quot;, action=&quot;store_true&quot;, default=False)</div>
-<div class="line"><a id="l00924" name="l00924"></a><span class="lineno">  924</span> </div>
-<div class="line"><a id="l00925" name="l00925"></a><span class="lineno">  925</span>    try:</div>
-<div class="line"><a id="l00926" name="l00926"></a><span class="lineno">  926</span>        (options, args) = opts.parse_args()</div>
-<div class="line"><a id="l00927" name="l00927"></a><span class="lineno">  927</span> </div>
-<div class="line"><a id="l00928" name="l00928"></a><span class="lineno">  928</span>        #If defined set the log file</div>
-<div class="line"><a id="l00929" name="l00929"></a><span class="lineno">  929</span>        if options.log:</div>
-<div class="line"><a id="l00930" name="l00930"></a><span class="lineno">  930</span>            uo.setLog(options.log)</div>
-<div class="line"><a id="l00931" name="l00931"></a><span class="lineno">  931</span> </div>
-<div class="line"><a id="l00932" name="l00932"></a><span class="lineno">  932</span>        backup = Backup(uo, options)</div>
-<div class="line"><a id="l00933" name="l00933"></a><span class="lineno">  933</span>        if options.test_email:</div>
-<div class="line"><a id="l00934" name="l00934"></a><span class="lineno">  934</span>            backup.testEmail()</div>
-<div class="line"><a id="l00935" name="l00935"></a><span class="lineno">  935</span>        else:</div>
-<div class="line"><a id="l00936" name="l00936"></a><span class="lineno">  936</span>            backup.execute()</div>
-<div class="line"><a id="l00937" name="l00937"></a><span class="lineno">  937</span> </div>
-<div class="line"><a id="l00938" name="l00938"></a><span class="lineno">  938</span>    #If the program throws a system exit exception</div>
-<div class="line"><a id="l00939" name="l00939"></a><span class="lineno">  939</span>    except SystemExit:</div>
-<div class="line"><a id="l00940" name="l00940"></a><span class="lineno">  940</span>      pass</div>
-<div class="line"><a id="l00941" name="l00941"></a><span class="lineno">  941</span>    #Don&#39;t print error information if CTRL C pressed</div>
-<div class="line"><a id="l00942" name="l00942"></a><span class="lineno">  942</span>    except KeyboardInterrupt:</div>
-<div class="line"><a id="l00943" name="l00943"></a><span class="lineno">  943</span>      pass</div>
-<div class="line"><a id="l00944" name="l00944"></a><span class="lineno">  944</span>    except Exception as e:</div>
-<div class="line"><a id="l00945" name="l00945"></a><span class="lineno">  945</span>        eTextList=[]</div>
-<div class="line"><a id="l00946" name="l00946"></a><span class="lineno">  946</span>        #If we have some output from a check_output cmd</div>
-<div class="line"><a id="l00947" name="l00947"></a><span class="lineno">  947</span>        if hasattr(e, &#39;output&#39;):</div>
-<div class="line"><a id="l00948" name="l00948"></a><span class="lineno">  948</span>            eTextList.append( str(e.output) )</div>
-<div class="line"><a id="l00949" name="l00949"></a><span class="lineno">  949</span>        eTextList.append( str(e) )</div>
-<div class="line"><a id="l00950" name="l00950"></a><span class="lineno">  950</span>        uo.error(&quot;\n&quot;.join(eTextList))</div>
-<div class="line"><a id="l00951" name="l00951"></a><span class="lineno">  951</span> </div>
-<div class="line"><a id="l00952" name="l00952"></a><span class="lineno">  952</span>        if options.debug:</div>
-<div class="line"><a id="l00953" name="l00953"></a><span class="lineno">  953</span>            raise</div>
-<div class="line"><a id="l00954" name="l00954"></a><span class="lineno">  954</span> </div>
-<div class="line"><a id="l00955" name="l00955"></a><span class="lineno">  955</span> </div>
+<div class="line"><a id="l00890" name="l00890"></a><span class="lineno">  890</span>           self._saveConfig()</div>
+<div class="line"><a id="l00891" name="l00891"></a><span class="lineno">  891</span> </div>
+<div class="line"><a id="l00892" name="l00892"></a><span class="lineno">  892</span>        except Exception as e:</div>
+<div class="line"><a id="l00893" name="l00893"></a><span class="lineno">  893</span>            if self._options.email_server:</div>
+<div class="line"><a id="l00894" name="l00894"></a><span class="lineno">  894</span>                try:</div>
+<div class="line"><a id="l00895" name="l00895"></a><span class="lineno">  895</span>                    eTextList=[]</div>
+<div class="line"><a id="l00896" name="l00896"></a><span class="lineno">  896</span>                    #If we have some output from a check_output cmd</div>
+<div class="line"><a id="l00897" name="l00897"></a><span class="lineno">  897</span>                    if hasattr(e, &#39;output&#39;):</div>
+<div class="line"><a id="l00898" name="l00898"></a><span class="lineno">  898</span>                        #Include this in the error text</div>
+<div class="line"><a id="l00899" name="l00899"></a><span class="lineno">  899</span>                        eTextList.append(e.output)</div>
+<div class="line"><a id="l00900" name="l00900"></a><span class="lineno">  900</span>                    eTextList.append( str(e) )</div>
+<div class="line"><a id="l00901" name="l00901"></a><span class="lineno">  901</span>                    self._notifyEmail(&quot;Backup Failed&quot;, body = &quot;{}\n\n\n{}&quot;.format(&quot;\n&quot;.join(eTextList), self._getBackupLog()) )</div>
+<div class="line"><a id="l00902" name="l00902"></a><span class="lineno">  902</span>                except:</div>
+<div class="line"><a id="l00903" name="l00903"></a><span class="lineno">  903</span>                    pass</div>
+<div class="line"><a id="l00904" name="l00904"></a><span class="lineno">  904</span> </div>
+<div class="line"><a id="l00905" name="l00905"></a><span class="lineno">  905</span>            raise</div>
+<div class="line"><a id="l00906" name="l00906"></a><span class="lineno">  906</span> </div>
 </div>
-<div class="line"><a id="l00956" name="l00956"></a><span class="lineno">  956</span>if __name__== &#39;__main__&#39;:</div>
-<div class="line"><a id="l00957" name="l00957"></a><span class="lineno">  957</span>    main()</div>
+<div class="foldopen" id="foldopen00907" data-start="" data-end="">
+<div class="line"><a id="l00907" name="l00907"></a><span class="lineno"><a class="line" href="classpbackup_1_1backup_1_1Backup.html#aa6e3aa1601ccff4b0f17a38b814e5561">  907</a></span>    def testEmail(self):</div>
+<div class="line"><a id="l00908" name="l00908"></a><span class="lineno">  908</span>        &quot;&quot;&quot;@brief Send a test email&quot;&quot;&quot;</div>
+<div class="line"><a id="l00909" name="l00909"></a><span class="lineno">  909</span>        self._notifyEmail(&quot;Backup Email Test&quot;, body = &quot;TESTING BACKUP EMAIL SEND\n\n\n&quot; )</div>
+<div class="line"><a id="l00910" name="l00910"></a><span class="lineno">  910</span> </div>
+</div>
+</div>
+<div class="foldopen" id="foldopen00911" data-start="" data-end="">
+<div class="line"><a id="l00911" name="l00911"></a><span class="lineno"><a class="line" href="namespacepbackup_1_1backup.html#a51af30a60f9f02777c6396b8247e356f">  911</a></span>def main():</div>
+<div class="line"><a id="l00912" name="l00912"></a><span class="lineno">  912</span>    uo = UO()</div>
+<div class="line"><a id="l00913" name="l00913"></a><span class="lineno">  913</span> </div>
+<div class="line"><a id="l00914" name="l00914"></a><span class="lineno">  914</span>    opts=OptionParser(usage=&quot;\n\</div>
+<div class="line"><a id="l00915" name="l00915"></a><span class="lineno">  915</span>     A command line backup tool that provides full and incremental backups using hard links\n\</div>
+<div class="line"><a id="l00916" name="l00916"></a><span class="lineno">  916</span>     so that folders with a complete backup history are available using a minimum of storage space.\n\</div>
+<div class="line"><a id="l00917" name="l00917"></a><span class="lineno">  917</span>     Rsync (/usr/bin/rsync) must be installed (installed by default on most Linux distributions).&quot;)</div>
+<div class="line"><a id="l00918" name="l00918"></a><span class="lineno">  918</span> </div>
+<div class="line"><a id="l00919" name="l00919"></a><span class="lineno">  919</span>    opts.add_option(&quot;--src&quot;,                    help=&quot;Followed by the absolute path of the path to backup (required). This may include any regular expressions that can be used on the rsync src. See rsync documentation for more details of this.&quot;, default=None)</div>
+<div class="line"><a id="l00920" name="l00920"></a><span class="lineno">  920</span>    opts.add_option(&quot;--dest&quot;,                   help=&quot;Followed by the absolute path of the path to hold the backups. (required)&quot;, default=None)</div>
+<div class="line"><a id="l00921" name="l00921"></a><span class="lineno">  921</span>    opts.add_option(&quot;--src_exclude&quot;,            help=&quot;Followed by a comma separated list of exclude patterns to be passed to rsync in order to exclude files in the src path from the backup (optional). See rsync documentation for more details of this.&quot;, default=None)</div>
+<div class="line"><a id="l00922" name="l00922"></a><span class="lineno">  922</span>    opts.add_option(&quot;--ssh&quot;,                    help=&quot;Followed by the src ssh host address (optional). If supplied this can include the username, E.G username@myserver (if no username is supplied the current username will be used). This may also include the SSH port number E.G username@myserver:22&quot;, default=None)</div>
+<div class="line"><a id="l00923" name="l00923"></a><span class="lineno">  923</span>    opts.add_option(&quot;--log&quot;,                    help=&quot;Followed by the absolute path of the backup log file (optional).&quot;, default=None)</div>
+<div class="line"><a id="l00924" name="l00924"></a><span class="lineno">  924</span>    opts.add_option(&quot;--max_full&quot;,               help=&quot;Followed by the maximum number of full backups to store (default=4).&quot;, type=&quot;int&quot;, default=4)</div>
+<div class="line"><a id="l00925" name="l00925"></a><span class="lineno">  925</span>    opts.add_option(&quot;--max_inc&quot;,                help=&quot;Followed by the maximum number of incremental backups to store (default=92).&quot;, type=&quot;int&quot;, default=92)</div>
+<div class="line"><a id="l00926" name="l00926"></a><span class="lineno">  926</span> </div>
+<div class="line"><a id="l00927" name="l00927"></a><span class="lineno">  927</span>    opts.add_option(&quot;--email_server&quot;,           help=&quot;Followed by the email (SMTP) server for notification of backup progress (optional). The SMTP server address can include the port number of the SMTP server (E.G smtp.gmail.com:587).&quot;, default=None)</div>
+<div class="line"><a id="l00928" name="l00928"></a><span class="lineno">  928</span>    opts.add_option(&quot;--email_list&quot;,             help=&quot;Followed by a comma separated list of email addresses to be sent email notifications of backup progress (optional).&quot;, default=None)</div>
+<div class="line"><a id="l00929" name="l00929"></a><span class="lineno">  929</span>    opts.add_option(&quot;--email_username&quot;,         help=&quot;Followed by the email username for notification of backup progress (optional).&quot;, default=None)</div>
+<div class="line"><a id="l00930" name="l00930"></a><span class="lineno">  930</span>    opts.add_option(&quot;--email_password&quot;,         help=&quot;Followed by the email password for notification of backup progress (optional).&quot;, default=None)</div>
+<div class="line"><a id="l00931" name="l00931"></a><span class="lineno">  931</span>    opts.add_option(&quot;--test_email&quot;,             help=&quot;Send a test email to check the email works.&quot;, action=&quot;store_true&quot;)</div>
+<div class="line"><a id="l00932" name="l00932"></a><span class="lineno">  932</span> </div>
+<div class="line"><a id="l00933" name="l00933"></a><span class="lineno">  933</span>    opts.add_option(&quot;--pre_script&quot;,             help=&quot;Followed by the absolute path of a script to be executed before the backup (optional). This is usefull is LVM snapshots are used. The script can be used to create the snapshot .&quot;, default=None)</div>
+<div class="line"><a id="l00934" name="l00934"></a><span class="lineno">  934</span>    opts.add_option(&quot;--post_script&quot;,            help=&quot;Followed by the absolute path of a script to be executed after the backup (optional). This is usefull is LVM snapshots are used. The script can be used to remove the snapshot once the backup is complete.&quot;, default=None)</div>
+<div class="line"><a id="l00935" name="l00935"></a><span class="lineno">  935</span> </div>
+<div class="line"><a id="l00936" name="l00936"></a><span class="lineno">  936</span>    opts.add_option(&quot;--save_config&quot;,            help=&quot;Followed by the config file to save the current command line options into.&quot;, default=None)</div>
+<div class="line"><a id="l00937" name="l00937"></a><span class="lineno">  937</span>    opts.add_option(&quot;--load_config&quot;,            help=&quot;Followed by the config file to load all command line options from. If this option is used then no other command line options are required as they will all be loaded from the config file. This allows for a simpler command line once you&#39;ve got the backup you&#39;re after.&quot;, default=None)</div>
+<div class="line"><a id="l00938" name="l00938"></a><span class="lineno">  938</span>    opts.add_option(&quot;--show_cmd_line&quot;,          help=&quot;Show the command line (excluding --save_config, --load_config --list_options) and exit. This is useful if the --load_config option is used and you wish to find the original command line.&quot;, action=&quot;store_true&quot;, default=False)</div>
+<div class="line"><a id="l00939" name="l00939"></a><span class="lineno">  939</span>    opts.add_option(&quot;--max_daily_backups&quot;,      help=&quot;Followed by the maximum number of backups that can be taken in one day (default = 5). This ensures that no matter how many times backup is executed, the backups stored will be limited.&quot;, type=&quot;int&quot;, default=5)</div>
+<div class="line"><a id="l00940" name="l00940"></a><span class="lineno">  940</span> </div>
+<div class="line"><a id="l00941" name="l00941"></a><span class="lineno">  941</span>    opts.add_option(&quot;--disable_create_dest&quot;,    help=&quot;Disable the creation of the dest path if it does not exist. By default the dest path is created if it does not exist&quot;, action=&quot;store_true&quot;, default=False)</div>
+<div class="line"><a id="l00942" name="l00942"></a><span class="lineno">  942</span> </div>
+<div class="line"><a id="l00943" name="l00943"></a><span class="lineno">  943</span>    opts.add_option(&quot;--low&quot;,                    help=&quot;Low disk space threshold (MB). If the destination disk space drops below this then backup complete email messages will include a low disk space warning (default = 5000 MB).&quot;, type=&quot;int&quot;, default=5000)</div>
+<div class="line"><a id="l00944" name="l00944"></a><span class="lineno">  944</span> </div>
+<div class="line"><a id="l00945" name="l00945"></a><span class="lineno">  945</span>    opts.add_option(&quot;--monthly_full&quot;,           help=&quot;Perform a full backup on the first day of every month. This overrides the max_inc argument.&quot;, action=&quot;store_true&quot;, default=False)</div>
+<div class="line"><a id="l00946" name="l00946"></a><span class="lineno">  946</span> </div>
+<div class="line"><a id="l00947" name="l00947"></a><span class="lineno">  947</span>    opts.add_option(&quot;-d&quot;, &quot;--debug&quot;,            help=&quot;Enable debugging.&quot;, action=&quot;store_true&quot;, default=False)</div>
+<div class="line"><a id="l00948" name="l00948"></a><span class="lineno">  948</span> </div>
+<div class="line"><a id="l00949" name="l00949"></a><span class="lineno">  949</span>    try:</div>
+<div class="line"><a id="l00950" name="l00950"></a><span class="lineno">  950</span>        (options, args) = opts.parse_args()</div>
+<div class="line"><a id="l00951" name="l00951"></a><span class="lineno">  951</span> </div>
+<div class="line"><a id="l00952" name="l00952"></a><span class="lineno">  952</span>        #If defined set the log file</div>
+<div class="line"><a id="l00953" name="l00953"></a><span class="lineno">  953</span>        if options.log:</div>
+<div class="line"><a id="l00954" name="l00954"></a><span class="lineno">  954</span>            uo.setLog(options.log)</div>
+<div class="line"><a id="l00955" name="l00955"></a><span class="lineno">  955</span> </div>
+<div class="line"><a id="l00956" name="l00956"></a><span class="lineno">  956</span>        backup = Backup(uo, options)</div>
+<div class="line"><a id="l00957" name="l00957"></a><span class="lineno">  957</span>        if options.test_email:</div>
+<div class="line"><a id="l00958" name="l00958"></a><span class="lineno">  958</span>            backup.testEmail()</div>
+<div class="line"><a id="l00959" name="l00959"></a><span class="lineno">  959</span>        else:</div>
+<div class="line"><a id="l00960" name="l00960"></a><span class="lineno">  960</span>            backup.execute()</div>
+<div class="line"><a id="l00961" name="l00961"></a><span class="lineno">  961</span> </div>
+<div class="line"><a id="l00962" name="l00962"></a><span class="lineno">  962</span>    #If the program throws a system exit exception</div>
+<div class="line"><a id="l00963" name="l00963"></a><span class="lineno">  963</span>    except SystemExit:</div>
+<div class="line"><a id="l00964" name="l00964"></a><span class="lineno">  964</span>      pass</div>
+<div class="line"><a id="l00965" name="l00965"></a><span class="lineno">  965</span>    #Don&#39;t print error information if CTRL C pressed</div>
+<div class="line"><a id="l00966" name="l00966"></a><span class="lineno">  966</span>    except KeyboardInterrupt:</div>
+<div class="line"><a id="l00967" name="l00967"></a><span class="lineno">  967</span>      pass</div>
+<div class="line"><a id="l00968" name="l00968"></a><span class="lineno">  968</span>    except Exception as e:</div>
+<div class="line"><a id="l00969" name="l00969"></a><span class="lineno">  969</span>        eTextList=[]</div>
+<div class="line"><a id="l00970" name="l00970"></a><span class="lineno">  970</span>        #If we have some output from a check_output cmd</div>
+<div class="line"><a id="l00971" name="l00971"></a><span class="lineno">  971</span>        if hasattr(e, &#39;output&#39;):</div>
+<div class="line"><a id="l00972" name="l00972"></a><span class="lineno">  972</span>            eTextList.append( str(e.output) )</div>
+<div class="line"><a id="l00973" name="l00973"></a><span class="lineno">  973</span>        eTextList.append( str(e) )</div>
+<div class="line"><a id="l00974" name="l00974"></a><span class="lineno">  974</span>        uo.error(&quot;\n&quot;.join(eTextList))</div>
+<div class="line"><a id="l00975" name="l00975"></a><span class="lineno">  975</span> </div>
+<div class="line"><a id="l00976" name="l00976"></a><span class="lineno">  976</span>        if options.debug:</div>
+<div class="line"><a id="l00977" name="l00977"></a><span class="lineno">  977</span>            raise</div>
+<div class="line"><a id="l00978" name="l00978"></a><span class="lineno">  978</span> </div>
+<div class="line"><a id="l00979" name="l00979"></a><span class="lineno">  979</span> </div>
+</div>
+<div class="line"><a id="l00980" name="l00980"></a><span class="lineno">  980</span>if __name__== &#39;__main__&#39;:</div>
+<div class="line"><a id="l00981" name="l00981"></a><span class="lineno">  981</span>    main()</div>
 <div class="ttc" id="aclasspbackup_1_1backup_1_1BackupError_html"><div class="ttname"><a href="classpbackup_1_1backup_1_1BackupError.html">pbackup.backup.BackupError</a></div><div class="ttdef"><b>Definition</b> <a href="backup_8py_source.html#l00015">backup.py:15</a></div></div>
 <div class="ttc" id="aclasspbackup_1_1backup_1_1Backup_html"><div class="ttname"><a href="classpbackup_1_1backup_1_1Backup.html">pbackup.backup.Backup</a></div><div class="ttdef"><b>Definition</b> <a href="backup_8py_source.html#l00088">backup.py:88</a></div></div>
 <div class="ttc" id="aclasspbackup_1_1backup_1_1Backup_html_a0f1d05c056dedc296600316cc4284a3d"><div class="ttname"><a href="classpbackup_1_1backup_1_1Backup.html#a0f1d05c056dedc296600316cc4284a3d">pbackup.backup.Backup._checkOptions</a></div><div class="ttdeci">_checkOptions(self)</div><div class="ttdef"><b>Definition</b> <a href="backup_8py_source.html#l00115">backup.py:115</a></div></div>

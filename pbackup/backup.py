@@ -670,6 +670,27 @@ class Backup(object):
 
         return backupsToday
 
+    def _addExclusions(self, cmd):
+        """@brief Check any user defined exclusion patterns.
+           @param cmd The rsync command thus far.
+           @return The rsync command with exclusions."""
+        #If the user has defined an exclusion pattern
+        if self._options.src_exclude:
+            exludePatternList  = self._options.src_exclude.split(",")
+            for exludePattern in exludePatternList:
+                if exludePattern.startswith(self._options.src):
+                    exludePattern = exludePattern.replace(self._options.src, "")
+                # If exclude pattern does not contain a wildcard character.
+                if exludePattern.find("*") == -1:
+                    # Check that it's an existing file or folder.
+                    fullPath = os.path.join(self._options.src, exludePattern)
+                    if not os.path.isdir(fullPath) and not os.path.isfile(fullPath):
+                        raise Exception(f"Failed to exclude {fullPath} as path/file not found.")
+
+                cmd="{} --exclude {}".format(cmd, exludePattern)
+
+        return cmd
+
     def _doBackup(self):
         """@brief Execute the rsync command to perform the backup"""
         backupDest              = None
@@ -709,11 +730,7 @@ class Backup(object):
                 lastBackupPath = self._getLastBackupPath(backupDest)
                 cmd="{} -avh --safe-links --delete --link-dest={}".format(Backup.RSYNC_CMD, lastBackupPath)
 
-            #If the user has defined an exclusion pattern
-            if self._options.src_exclude:
-                exludePatternList  = self._options.src_exclude.split(",")
-                for exludePattern in exludePatternList:
-                    cmd="{} --exclude {}".format(cmd, exludePattern)
+            cmd = self._addExclusions(cmd)
 
             #We set the backup destination with an incomplete suffix and then when the backup is complete
             #set it to the correct destination. This allows users to easily see if a backup did not complete
@@ -755,6 +772,8 @@ class Backup(object):
             #Purge old backups if required
             self._purgeBackups()
 
+            self._uo.info("Backup success.")
+
         finally:
             #If the backup failed, create the record of the backup space used
             if not diskUsageAfter:
@@ -765,6 +784,11 @@ class Backup(object):
             if self._options.post_script:
                 cmdOutput = check_output(self._options.post_script, shell=True, stderr=STDOUT)
                 self._uo.info(cmdOutput)
+
+            elapsedSeconds = time()-startTime
+            self._uo.error(f"Took {elapsedSeconds} seconds to execute.")
+
+
 
     def _getBackupSizeLogFile(self):
         """@return The name of the backup size log file.
@@ -920,7 +944,7 @@ def main():
 
     opts.add_option("--monthly_full",           help="Perform a full backup on the first day of every month. This overrides the max_inc argument.", action="store_true", default=False)
 
-    opts.add_option("--debug",                  help="Enable debugging.", action="store_true", default=False)
+    opts.add_option("-d", "--debug",            help="Enable debugging.", action="store_true", default=False)
 
     try:
         (options, args) = opts.parse_args()
