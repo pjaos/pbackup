@@ -112,76 +112,67 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="backup_8py_source.html#l00911">911</a> of file <a class="el" href="backup_8py_source.html">backup.py</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  911</span><span class="keyword">def </span>main():</div>
-<div class="line"><span class="lineno">  912</span>    uo = UO()</div>
-<div class="line"><span class="lineno">  913</span> </div>
-<div class="line"><span class="lineno">  914</span>    opts=OptionParser(usage=<span class="stringliteral">&quot;\n\</span></div>
-<div class="line"><span class="lineno">  915</span><span class="stringliteral">     A command line backup tool that provides full and incremental backups using hard links\n\</span></div>
-<div class="line"><span class="lineno">  916</span><span class="stringliteral">     so that folders with a complete backup history are available using a minimum of storage space.\n\</span></div>
-<div class="line"><span class="lineno">  917</span><span class="stringliteral">     Rsync (/usr/bin/rsync) must be installed (installed by default on most Linux distributions).&quot;</span>)</div>
-<div class="line"><span class="lineno">  918</span> </div>
-<div class="line"><span class="lineno">  919</span>    opts.add_option(<span class="stringliteral">&quot;--src&quot;</span>,                    help=<span class="stringliteral">&quot;Followed by the absolute path of the path to backup (required). This may include any regular expressions that can be used on the rsync src. See rsync documentation for more details of this.&quot;</span>, default=<span class="keywordtype">None</span>)</div>
-<div class="line"><span class="lineno">  920</span>    opts.add_option(<span class="stringliteral">&quot;--dest&quot;</span>,                   help=<span class="stringliteral">&quot;Followed by the absolute path of the path to hold the backups. (required)&quot;</span>, default=<span class="keywordtype">None</span>)</div>
-<div class="line"><span class="lineno">  921</span>    opts.add_option(<span class="stringliteral">&quot;--src_exclude&quot;</span>,            help=<span class="stringliteral">&quot;Followed by a comma separated list of exclude patterns to be passed to rsync in order to exclude files in the src path from the backup (optional). See rsync documentation for more details of this.&quot;</span>, default=<span class="keywordtype">None</span>)</div>
-<div class="line"><span class="lineno">  922</span>    opts.add_option(<span class="stringliteral">&quot;--ssh&quot;</span>,                    help=<span class="stringliteral">&quot;Followed by the src ssh host address (optional). If supplied this can include the username, E.G username@myserver (if no username is supplied the current username will be used). This may also include the SSH port number E.G username@myserver:22&quot;</span>, default=<span class="keywordtype">None</span>)</div>
-<div class="line"><span class="lineno">  923</span>    opts.add_option(<span class="stringliteral">&quot;--log&quot;</span>,                    help=<span class="stringliteral">&quot;Followed by the absolute path of the backup log file (optional).&quot;</span>, default=<span class="keywordtype">None</span>)</div>
-<div class="line"><span class="lineno">  924</span>    opts.add_option(<span class="stringliteral">&quot;--max_full&quot;</span>,               help=<span class="stringliteral">&quot;Followed by the maximum number of full backups to store (default=4).&quot;</span>, type=<span class="stringliteral">&quot;int&quot;</span>, default=4)</div>
-<div class="line"><span class="lineno">  925</span>    opts.add_option(<span class="stringliteral">&quot;--max_inc&quot;</span>,                help=<span class="stringliteral">&quot;Followed by the maximum number of incremental backups to store (default=92).&quot;</span>, type=<span class="stringliteral">&quot;int&quot;</span>, default=92)</div>
-<div class="line"><span class="lineno">  926</span> </div>
-<div class="line"><span class="lineno">  927</span>    opts.add_option(<span class="stringliteral">&quot;--email_server&quot;</span>,           help=<span class="stringliteral">&quot;Followed by the email (SMTP) server for notification of backup progress (optional). The SMTP server address can include the port number of the SMTP server (E.G smtp.gmail.com:587).&quot;</span>, default=<span class="keywordtype">None</span>)</div>
-<div class="line"><span class="lineno">  928</span>    opts.add_option(<span class="stringliteral">&quot;--email_list&quot;</span>,             help=<span class="stringliteral">&quot;Followed by a comma separated list of email addresses to be sent email notifications of backup progress (optional).&quot;</span>, default=<span class="keywordtype">None</span>)</div>
-<div class="line"><span class="lineno">  929</span>    opts.add_option(<span class="stringliteral">&quot;--email_username&quot;</span>,         help=<span class="stringliteral">&quot;Followed by the email username for notification of backup progress (optional).&quot;</span>, default=<span class="keywordtype">None</span>)</div>
-<div class="line"><span class="lineno">  930</span>    opts.add_option(<span class="stringliteral">&quot;--email_password&quot;</span>,         help=<span class="stringliteral">&quot;Followed by the email password for notification of backup progress (optional).&quot;</span>, default=<span class="keywordtype">None</span>)</div>
-<div class="line"><span class="lineno">  931</span>    opts.add_option(<span class="stringliteral">&quot;--test_email&quot;</span>,             help=<span class="stringliteral">&quot;Send a test email to check the email works.&quot;</span>, action=<span class="stringliteral">&quot;store_true&quot;</span>)</div>
-<div class="line"><span class="lineno">  932</span> </div>
-<div class="line"><span class="lineno">  933</span>    opts.add_option(<span class="stringliteral">&quot;--pre_script&quot;</span>,             help=<span class="stringliteral">&quot;Followed by the absolute path of a script to be executed before the backup (optional). This is usefull is LVM snapshots are used. The script can be used to create the snapshot .&quot;</span>, default=<span class="keywordtype">None</span>)</div>
-<div class="line"><span class="lineno">  934</span>    opts.add_option(<span class="stringliteral">&quot;--post_script&quot;</span>,            help=<span class="stringliteral">&quot;Followed by the absolute path of a script to be executed after the backup (optional). This is usefull is LVM snapshots are used. The script can be used to remove the snapshot once the backup is complete.&quot;</span>, default=<span class="keywordtype">None</span>)</div>
-<div class="line"><span class="lineno">  935</span> </div>
-<div class="line"><span class="lineno">  936</span>    opts.add_option(<span class="stringliteral">&quot;--save_config&quot;</span>,            help=<span class="stringliteral">&quot;Followed by the config file to save the current command line options into.&quot;</span>, default=<span class="keywordtype">None</span>)</div>
-<div class="line"><span class="lineno">  937</span>    opts.add_option(<span class="stringliteral">&quot;--load_config&quot;</span>,            help=<span class="stringliteral">&quot;Followed by the config file to load all command line options from. If this option is used then no other command line options are required as they will all be loaded from the config file. This allows for a simpler command line once you&#39;ve got the backup you&#39;re after.&quot;</span>, default=<span class="keywordtype">None</span>)</div>
-<div class="line"><span class="lineno">  938</span>    opts.add_option(<span class="stringliteral">&quot;--show_cmd_line&quot;</span>,          help=<span class="stringliteral">&quot;Show the command line (excluding --save_config, --load_config --list_options) and exit. This is useful if the --load_config option is used and you wish to find the original command line.&quot;</span>, action=<span class="stringliteral">&quot;store_true&quot;</span>, default=<span class="keyword">False</span>)</div>
-<div class="line"><span class="lineno">  939</span>    opts.add_option(<span class="stringliteral">&quot;--max_daily_backups&quot;</span>,      help=<span class="stringliteral">&quot;Followed by the maximum number of backups that can be taken in one day (default = 5). This ensures that no matter how many times backup is executed, the backups stored will be limited.&quot;</span>, type=<span class="stringliteral">&quot;int&quot;</span>, default=5)</div>
-<div class="line"><span class="lineno">  940</span> </div>
-<div class="line"><span class="lineno">  941</span>    opts.add_option(<span class="stringliteral">&quot;--disable_create_dest&quot;</span>,    help=<span class="stringliteral">&quot;Disable the creation of the dest path if it does not exist. By default the dest path is created if it does not exist&quot;</span>, action=<span class="stringliteral">&quot;store_true&quot;</span>, default=<span class="keyword">False</span>)</div>
-<div class="line"><span class="lineno">  942</span> </div>
-<div class="line"><span class="lineno">  943</span>    opts.add_option(<span class="stringliteral">&quot;--low&quot;</span>,                    help=<span class="stringliteral">&quot;Low disk space threshold (MB). If the destination disk space drops below this then backup complete email messages will include a low disk space warning (default = 5000 MB).&quot;</span>, type=<span class="stringliteral">&quot;int&quot;</span>, default=5000)</div>
+<p class="definition">Definition at line <a class="el" href="backup_8py_source.html#l00923">923</a> of file <a class="el" href="backup_8py_source.html">backup.py</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  923</span><span class="keyword">def </span>main():</div>
+<div class="line"><span class="lineno">  924</span>    uo = UO()</div>
+<div class="line"><span class="lineno">  925</span> </div>
+<div class="line"><span class="lineno">  926</span>    opts=OptionParser(usage=<span class="stringliteral">&quot;\n\</span></div>
+<div class="line"><span class="lineno">  927</span><span class="stringliteral">     A command line backup tool that provides full and incremental backups using hard links\n\</span></div>
+<div class="line"><span class="lineno">  928</span><span class="stringliteral">     so that folders with a complete backup history are available using a minimum of storage space.\n\</span></div>
+<div class="line"><span class="lineno">  929</span><span class="stringliteral">     Rsync (/usr/bin/rsync) must be installed (installed by default on most Linux distributions).&quot;</span>)</div>
+<div class="line"><span class="lineno">  930</span> </div>
+<div class="line"><span class="lineno">  931</span>    opts.add_option(<span class="stringliteral">&quot;--src&quot;</span>,                    help=<span class="stringliteral">&quot;Followed by the absolute path of the path to backup (required). This may include any regular expressions that can be used on the rsync src. See rsync documentation for more details of this.&quot;</span>, default=<span class="keywordtype">None</span>)</div>
+<div class="line"><span class="lineno">  932</span>    opts.add_option(<span class="stringliteral">&quot;--dest&quot;</span>,                   help=<span class="stringliteral">&quot;Followed by the absolute path of the path to hold the backups. (required)&quot;</span>, default=<span class="keywordtype">None</span>)</div>
+<div class="line"><span class="lineno">  933</span>    opts.add_option(<span class="stringliteral">&quot;--src_exclude&quot;</span>,            help=<span class="stringliteral">&quot;Followed by a comma separated list of exclude patterns to be passed to rsync in order to exclude files in the src path from the backup (optional). See rsync documentation for more details of this.&quot;</span>, default=<span class="keywordtype">None</span>)</div>
+<div class="line"><span class="lineno">  934</span>    opts.add_option(<span class="stringliteral">&quot;--ssh&quot;</span>,                    help=<span class="stringliteral">&quot;Followed by the src ssh host address (optional). If supplied this can include the username, E.G username@myserver (if no username is supplied the current username will be used). This may also include the SSH port number E.G username@myserver:22&quot;</span>, default=<span class="keywordtype">None</span>)</div>
+<div class="line"><span class="lineno">  935</span>    opts.add_option(<span class="stringliteral">&quot;--log&quot;</span>,                    help=f<span class="stringliteral">&quot;Followed by the absolute path of the backup log file. Default = {Backup.DEFAULT_CMD_LINE_OP_LOG_FILE} (in dest folder).&quot;</span>, default=<span class="keywordtype">None</span>)</div>
+<div class="line"><span class="lineno">  936</span>    opts.add_option(<span class="stringliteral">&quot;--max_full&quot;</span>,               help=<span class="stringliteral">&quot;Followed by the maximum number of full backups to store (default=4).&quot;</span>, type=<span class="stringliteral">&quot;int&quot;</span>, default=4)</div>
+<div class="line"><span class="lineno">  937</span>    opts.add_option(<span class="stringliteral">&quot;--max_inc&quot;</span>,                help=<span class="stringliteral">&quot;Followed by the maximum number of incremental backups to store (default=92).&quot;</span>, type=<span class="stringliteral">&quot;int&quot;</span>, default=92)</div>
+<div class="line"><span class="lineno">  938</span> </div>
+<div class="line"><span class="lineno">  939</span>    opts.add_option(<span class="stringliteral">&quot;--email_server&quot;</span>,           help=<span class="stringliteral">&quot;Followed by the email (SMTP) server for notification of backup progress (optional). The SMTP server address can include the port number of the SMTP server (E.G smtp.gmail.com:587).&quot;</span>, default=<span class="keywordtype">None</span>)</div>
+<div class="line"><span class="lineno">  940</span>    opts.add_option(<span class="stringliteral">&quot;--email_list&quot;</span>,             help=<span class="stringliteral">&quot;Followed by a comma separated list of email addresses to be sent email notifications of backup progress (optional).&quot;</span>, default=<span class="keywordtype">None</span>)</div>
+<div class="line"><span class="lineno">  941</span>    opts.add_option(<span class="stringliteral">&quot;--email_username&quot;</span>,         help=<span class="stringliteral">&quot;Followed by the email username for notification of backup progress (optional).&quot;</span>, default=<span class="keywordtype">None</span>)</div>
+<div class="line"><span class="lineno">  942</span>    opts.add_option(<span class="stringliteral">&quot;--email_password&quot;</span>,         help=<span class="stringliteral">&quot;Followed by the email password for notification of backup progress (optional).&quot;</span>, default=<span class="keywordtype">None</span>)</div>
+<div class="line"><span class="lineno">  943</span>    opts.add_option(<span class="stringliteral">&quot;--test_email&quot;</span>,             help=<span class="stringliteral">&quot;Send a test email to check the email works.&quot;</span>, action=<span class="stringliteral">&quot;store_true&quot;</span>)</div>
 <div class="line"><span class="lineno">  944</span> </div>
-<div class="line"><span class="lineno">  945</span>    opts.add_option(<span class="stringliteral">&quot;--monthly_full&quot;</span>,           help=<span class="stringliteral">&quot;Perform a full backup on the first day of every month. This overrides the max_inc argument.&quot;</span>, action=<span class="stringliteral">&quot;store_true&quot;</span>, default=<span class="keyword">False</span>)</div>
-<div class="line"><span class="lineno">  946</span> </div>
-<div class="line"><span class="lineno">  947</span>    opts.add_option(<span class="stringliteral">&quot;-d&quot;</span>, <span class="stringliteral">&quot;--debug&quot;</span>,            help=<span class="stringliteral">&quot;Enable debugging.&quot;</span>, action=<span class="stringliteral">&quot;store_true&quot;</span>, default=<span class="keyword">False</span>)</div>
-<div class="line"><span class="lineno">  948</span> </div>
-<div class="line"><span class="lineno">  949</span>    <span class="keywordflow">try</span>:</div>
-<div class="line"><span class="lineno">  950</span>        (options, args) = opts.parse_args()</div>
-<div class="line"><span class="lineno">  951</span> </div>
-<div class="line"><span class="lineno">  952</span>        <span class="comment">#If defined set the log file</span></div>
-<div class="line"><span class="lineno">  953</span>        <span class="keywordflow">if</span> options.log:</div>
-<div class="line"><span class="lineno">  954</span>            uo.setLog(options.log)</div>
-<div class="line"><span class="lineno">  955</span> </div>
-<div class="line"><span class="lineno">  956</span>        backup = Backup(uo, options)</div>
-<div class="line"><span class="lineno">  957</span>        <span class="keywordflow">if</span> options.test_email:</div>
-<div class="line"><span class="lineno">  958</span>            backup.testEmail()</div>
-<div class="line"><span class="lineno">  959</span>        <span class="keywordflow">else</span>:</div>
-<div class="line"><span class="lineno">  960</span>            backup.execute()</div>
-<div class="line"><span class="lineno">  961</span> </div>
-<div class="line"><span class="lineno">  962</span>    <span class="comment">#If the program throws a system exit exception</span></div>
-<div class="line"><span class="lineno">  963</span>    <span class="keywordflow">except</span> SystemExit:</div>
-<div class="line"><span class="lineno">  964</span>      <span class="keywordflow">pass</span></div>
-<div class="line"><span class="lineno">  965</span>    <span class="comment">#Don&#39;t print error information if CTRL C pressed</span></div>
-<div class="line"><span class="lineno">  966</span>    <span class="keywordflow">except</span> KeyboardInterrupt:</div>
-<div class="line"><span class="lineno">  967</span>      <span class="keywordflow">pass</span></div>
-<div class="line"><span class="lineno">  968</span>    <span class="keywordflow">except</span> Exception <span class="keyword">as</span> e:</div>
-<div class="line"><span class="lineno">  969</span>        eTextList=[]</div>
-<div class="line"><span class="lineno">  970</span>        <span class="comment">#If we have some output from a check_output cmd</span></div>
-<div class="line"><span class="lineno">  971</span>        <span class="keywordflow">if</span> hasattr(e, <span class="stringliteral">&#39;output&#39;</span>):</div>
-<div class="line"><span class="lineno">  972</span>            eTextList.append( str(e.output) )</div>
-<div class="line"><span class="lineno">  973</span>        eTextList.append( str(e) )</div>
-<div class="line"><span class="lineno">  974</span>        uo.error(<span class="stringliteral">&quot;\n&quot;</span>.join(eTextList))</div>
-<div class="line"><span class="lineno">  975</span> </div>
-<div class="line"><span class="lineno">  976</span>        <span class="keywordflow">if</span> options.debug:</div>
-<div class="line"><span class="lineno">  977</span>            <span class="keywordflow">raise</span></div>
-<div class="line"><span class="lineno">  978</span> </div>
-<div class="line"><span class="lineno">  979</span> </div>
+<div class="line"><span class="lineno">  945</span>    opts.add_option(<span class="stringliteral">&quot;--pre_script&quot;</span>,             help=<span class="stringliteral">&quot;Followed by the absolute path of a script to be executed before the backup (optional). This is useful is LVM snapshots are used. The script can be used to create the snapshot .&quot;</span>, default=<span class="keywordtype">None</span>)</div>
+<div class="line"><span class="lineno">  946</span>    opts.add_option(<span class="stringliteral">&quot;--post_script&quot;</span>,            help=<span class="stringliteral">&quot;Followed by the absolute path of a script to be executed after the backup (optional). This is useful is LVM snapshots are used. The script can be used to remove the snapshot once the backup is complete.&quot;</span>, default=<span class="keywordtype">None</span>)</div>
+<div class="line"><span class="lineno">  947</span> </div>
+<div class="line"><span class="lineno">  948</span>    opts.add_option(<span class="stringliteral">&quot;--save_config&quot;</span>,            help=<span class="stringliteral">&quot;Followed by the config file to save the current command line options into.&quot;</span>, default=<span class="keywordtype">None</span>)</div>
+<div class="line"><span class="lineno">  949</span>    opts.add_option(<span class="stringliteral">&quot;--load_config&quot;</span>,            help=<span class="stringliteral">&quot;Followed by the config file to load all command line options from. If this option is used then no other command line options are required as they will all be loaded from the config file. This allows for a simpler command line once you&#39;ve got the backup you&#39;re after.&quot;</span>, default=<span class="keywordtype">None</span>)</div>
+<div class="line"><span class="lineno">  950</span>    opts.add_option(<span class="stringliteral">&quot;--show_cmd_line&quot;</span>,          help=<span class="stringliteral">&quot;Show the command line (excluding --save_config, --load_config --list_options) and exit. This is useful if the --load_config option is used and you wish to find the original command line.&quot;</span>, action=<span class="stringliteral">&quot;store_true&quot;</span>, default=<span class="keyword">False</span>)</div>
+<div class="line"><span class="lineno">  951</span>    opts.add_option(<span class="stringliteral">&quot;--max_daily_backups&quot;</span>,      help=<span class="stringliteral">&quot;Followed by the maximum number of backups that can be taken in one day (default = 5). This ensures that no matter how many times backup is executed, the backups stored will be limited.&quot;</span>, type=<span class="stringliteral">&quot;int&quot;</span>, default=5)</div>
+<div class="line"><span class="lineno">  952</span> </div>
+<div class="line"><span class="lineno">  953</span>    opts.add_option(<span class="stringliteral">&quot;--disable_create_dest&quot;</span>,    help=<span class="stringliteral">&quot;Disable the creation of the dest path if it does not exist. By default the dest path is created if it does not exist&quot;</span>, action=<span class="stringliteral">&quot;store_true&quot;</span>, default=<span class="keyword">False</span>)</div>
+<div class="line"><span class="lineno">  954</span> </div>
+<div class="line"><span class="lineno">  955</span>    opts.add_option(<span class="stringliteral">&quot;--low&quot;</span>,                    help=<span class="stringliteral">&quot;Low disk space threshold (MB). If the destination disk space drops below this then backup complete email messages will include a low disk space warning (default = 5000 MB).&quot;</span>, type=<span class="stringliteral">&quot;int&quot;</span>, default=5000)</div>
+<div class="line"><span class="lineno">  956</span> </div>
+<div class="line"><span class="lineno">  957</span>    opts.add_option(<span class="stringliteral">&quot;--monthly_full&quot;</span>,           help=<span class="stringliteral">&quot;Perform a full backup on the first day of every month. This overrides the max_inc argument.&quot;</span>, action=<span class="stringliteral">&quot;store_true&quot;</span>, default=<span class="keyword">False</span>)</div>
+<div class="line"><span class="lineno">  958</span> </div>
+<div class="line"><span class="lineno">  959</span>    opts.add_option(<span class="stringliteral">&quot;-d&quot;</span>, <span class="stringliteral">&quot;--debug&quot;</span>,            help=<span class="stringliteral">&quot;Enable debugging.&quot;</span>, action=<span class="stringliteral">&quot;store_true&quot;</span>, default=<span class="keyword">False</span>)</div>
+<div class="line"><span class="lineno">  960</span> </div>
+<div class="line"><span class="lineno">  961</span>    <span class="keywordflow">try</span>:</div>
+<div class="line"><span class="lineno">  962</span>        (options, args) = opts.parse_args()</div>
+<div class="line"><span class="lineno">  963</span> </div>
+<div class="line"><span class="lineno">  964</span>        backup = Backup(uo, options)</div>
+<div class="line"><span class="lineno">  965</span>        <span class="keywordflow">if</span> options.test_email:</div>
+<div class="line"><span class="lineno">  966</span>            backup.testEmail()</div>
+<div class="line"><span class="lineno">  967</span>        <span class="keywordflow">else</span>:</div>
+<div class="line"><span class="lineno">  968</span>            backup.execute()</div>
+<div class="line"><span class="lineno">  969</span> </div>
+<div class="line"><span class="lineno">  970</span>    <span class="comment">#If the program throws a system exit exception</span></div>
+<div class="line"><span class="lineno">  971</span>    <span class="keywordflow">except</span> SystemExit:</div>
+<div class="line"><span class="lineno">  972</span>      <span class="keywordflow">pass</span></div>
+<div class="line"><span class="lineno">  973</span> </div>
+<div class="line"><span class="lineno">  974</span>    <span class="comment">#Don&#39;t print error information if CTRL C pressed</span></div>
+<div class="line"><span class="lineno">  975</span>    <span class="keywordflow">except</span> KeyboardInterrupt:</div>
+<div class="line"><span class="lineno">  976</span>      <span class="keywordflow">pass</span></div>
+<div class="line"><span class="lineno">  977</span> </div>
+<div class="line"><span class="lineno">  978</span>    <span class="keywordflow">except</span> Exception <span class="keyword">as</span> e:</div>
+<div class="line"><span class="lineno">  979</span>        uo.error(str(e))</div>
+<div class="line"><span class="lineno">  980</span>        <span class="keywordflow">if</span> options.debug:</div>
+<div class="line"><span class="lineno">  981</span>            <span class="keywordflow">raise</span></div>
+<div class="line"><span class="lineno">  982</span> </div>
 </div><!-- fragment -->
 </div>
 </div>
