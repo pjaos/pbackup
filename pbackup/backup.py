@@ -13,7 +13,7 @@ import  shutil
 import  datetime
 
 class BackupError(Exception):
-    """@brief An excption raised during the backup process."""
+    """@brief An exception raised during the backup process."""
     pass
 
 class UO(object):
@@ -101,6 +101,8 @@ class Backup(object):
     BACKUP_LOG_FILE                 = "backup.log"
     INCOMPLETE_BACKUP_SUFFIX        = "incomplete"
     NOT_STARTED_BACKUP_SUFFIX       = "not_started"
+    DEFAULT_CMD_LINE_OP_LOG_FILE    = "cmd-line-output.log"
+    RSYNC_LOG_FILE                  = "rsync.log"
 
     def __init__(self, uo, options):
         """@brief Constructor
@@ -159,6 +161,14 @@ class Backup(object):
 
         if self._options.email_list and not self._options.email_server:
             raise BackupError("If the email list is defined then you must define the email server")
+
+        #If defined set the log file
+        if self._options.log:
+            self._uo.setLog(self._options.log)
+        else:
+            #set default log file
+            detailLog = os.path.join(self._options.dest, Backup.DEFAULT_CMD_LINE_OP_LOG_FILE)
+            self._uo.setLog(detailLog)
 
     def showCmdLine(self):
         """@brief show the command line. Useful when the user loaded the cmd line options from a file and
@@ -723,13 +733,15 @@ class Backup(object):
             #If this is the full backup
             if backupDest == fullBackupPath:
 
-                cmd="{} -avh --safe-links --delete".format(Backup.RSYNC_CMD)
+                cmd="{} --quiet -avh --safe-links --delete ".format(Backup.RSYNC_CMD)
 
             else:
 
                 lastBackupPath = self._getLastBackupPath(backupDest)
-                cmd="{} -avh --safe-links --delete --link-dest={}".format(Backup.RSYNC_CMD, lastBackupPath)
+                cmd="{} --quiet -avh --safe-links --delete --link-dest={} ".format(Backup.RSYNC_CMD, lastBackupPath)
 
+            rsync_log_file = os.path.join(self._options.dest, Backup.RSYNC_LOG_FILE)
+            cmd = cmd + f"--log-file={rsync_log_file} "
             cmd = self._addExclusions(cmd)
 
             #We set the backup destination with an incomplete suffix and then when the backup is complete
@@ -785,8 +797,8 @@ class Backup(object):
                 cmdOutput = check_output(self._options.post_script, shell=True, stderr=STDOUT)
                 self._uo.info(cmdOutput)
 
-            elapsedSeconds = time()-startTime
-            self._uo.error(f"Took {elapsedSeconds} seconds to execute.")
+            elapsedSeconds = time.time()-startTime
+            self._uo.info(f"Took {elapsedSeconds:.1f} seconds to execute.")
 
 
 
@@ -920,7 +932,7 @@ def main():
     opts.add_option("--dest",                   help="Followed by the absolute path of the path to hold the backups. (required)", default=None)
     opts.add_option("--src_exclude",            help="Followed by a comma separated list of exclude patterns to be passed to rsync in order to exclude files in the src path from the backup (optional). See rsync documentation for more details of this.", default=None)
     opts.add_option("--ssh",                    help="Followed by the src ssh host address (optional). If supplied this can include the username, E.G username@myserver (if no username is supplied the current username will be used). This may also include the SSH port number E.G username@myserver:22", default=None)
-    opts.add_option("--log",                    help="Followed by the absolute path of the backup log file (optional).", default=None)
+    opts.add_option("--log",                    help=f"Followed by the absolute path of the backup log file. Default = {Backup.DEFAULT_CMD_LINE_OP_LOG_FILE} (in dest folder).", default=None)
     opts.add_option("--max_full",               help="Followed by the maximum number of full backups to store (default=4).", type="int", default=4)
     opts.add_option("--max_inc",                help="Followed by the maximum number of incremental backups to store (default=92).", type="int", default=92)
 
@@ -930,8 +942,8 @@ def main():
     opts.add_option("--email_password",         help="Followed by the email password for notification of backup progress (optional).", default=None)
     opts.add_option("--test_email",             help="Send a test email to check the email works.", action="store_true")
 
-    opts.add_option("--pre_script",             help="Followed by the absolute path of a script to be executed before the backup (optional). This is usefull is LVM snapshots are used. The script can be used to create the snapshot .", default=None)
-    opts.add_option("--post_script",            help="Followed by the absolute path of a script to be executed after the backup (optional). This is usefull is LVM snapshots are used. The script can be used to remove the snapshot once the backup is complete.", default=None)
+    opts.add_option("--pre_script",             help="Followed by the absolute path of a script to be executed before the backup (optional). This is useful is LVM snapshots are used. The script can be used to create the snapshot .", default=None)
+    opts.add_option("--post_script",            help="Followed by the absolute path of a script to be executed after the backup (optional). This is useful is LVM snapshots are used. The script can be used to remove the snapshot once the backup is complete.", default=None)
 
     opts.add_option("--save_config",            help="Followed by the config file to save the current command line options into.", default=None)
     opts.add_option("--load_config",            help="Followed by the config file to load all command line options from. If this option is used then no other command line options are required as they will all be loaded from the config file. This allows for a simpler command line once you've got the backup you're after.", default=None)
@@ -949,10 +961,6 @@ def main():
     try:
         (options, args) = opts.parse_args()
 
-        #If defined set the log file
-        if options.log:
-            uo.setLog(options.log)
-
         backup = Backup(uo, options)
         if options.test_email:
             backup.testEmail()
@@ -962,20 +970,15 @@ def main():
     #If the program throws a system exit exception
     except SystemExit:
       pass
+
     #Don't print error information if CTRL C pressed
     except KeyboardInterrupt:
       pass
-    except Exception as e:
-        eTextList=[]
-        #If we have some output from a check_output cmd
-        if hasattr(e, 'output'):
-            eTextList.append( str(e.output) )
-        eTextList.append( str(e) )
-        uo.error("\n".join(eTextList))
 
+    except Exception as e:
+        uo.error(str(e))
         if options.debug:
             raise
-
 
 if __name__== '__main__':
     main()
