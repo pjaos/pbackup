@@ -11,6 +11,7 @@ import  pickle
 import  getpass
 import  shutil
 import  datetime
+import  re
 
 class BackupError(Exception):
     """@brief An exception raised during the backup process."""
@@ -103,6 +104,7 @@ class Backup(object):
     NOT_STARTED_BACKUP_SUFFIX       = "not_started"
     DEFAULT_CMD_LINE_OP_LOG_FILE    = "cmd-line-output.log"
     RSYNC_LOG_FILE                  = "rsync.log"
+    DEFAULT_MIN_FREE_GB                     = 500
 
     def __init__(self, uo, options):
         """@brief Constructor
@@ -382,7 +384,7 @@ class Backup(object):
                 raise Exception("You have define the email server password but not the username.")
             if not password:
                 raise Exception("You have define the email server username but not the password.")
-            
+
         srcID = f"{getpass.getuser()}@{socket.gethostname()}"
         srcID = "pausten.ge@gmail.com"
         # Prepare actual message
@@ -701,6 +703,30 @@ class Backup(object):
 
         return cmd
 
+    def _deleteOldBackups(self):
+        """@brief Delete old backups."""
+        lastBackup = self._getLastFullBackup()
+        match = re.search(r'\.FULL_\d+', lastBackup)
+        if match:
+            backupID = match.group(0)
+            entryList = os.listdir(self._options.dest)
+            backupFoldersToDel = []
+            for entry in entryList:
+                if entry.find(backupID) == -1:
+                    backupFoldersToDel.append(os.path.join(self._options.dest,entry))
+
+            for backupFolder in backupFoldersToDel:
+                if os.path.isdir(backupFolder):
+                    self._uo.info(f"Deleting {backupFolder}")
+                    shutil.rmtree(backupFolder)
+
+    def _ensureFreeDiskSpace(self):
+        """@brief Attempt to ensure there is free space before attempting a backup."""
+        diskUsage = DiskUsage(self._options.dest)
+        freeGB = diskUsage.getFreeGB()
+        if freeGB < self._options.free_gb:
+            self._deleteOldBackups()
+
     def _doBackup(self):
         """@brief Execute the rsync command to perform the backup"""
         backupDest              = None
@@ -890,6 +916,8 @@ class Backup(object):
             except:
                 raise Exception("rsync is not installed on the ssh server ({}). Please install it and try again.".format(self._options.ssh))
 
+        else:
+            self._ensureFreeDiskSpace()
 
     def execute(self):
         """@brief Called to execute the backup process"""
@@ -955,6 +983,9 @@ def main():
     opts.add_option("--low",                    help="Low disk space threshold (MB). If the destination disk space drops below this then backup complete email messages will include a low disk space warning (default = 5000 MB).", type="int", default=5000)
 
     opts.add_option("--monthly_full",           help="Perform a full backup on the first day of every month. This overrides the max_inc argument.", action="store_true", default=False)
+
+    opts.add_option("--free_gb",                help=f"The free GB value. If the destination disk is local and it does not have this amount of free disk space before backup starts then and attempt is made to free up disk space before starting the backup (default={Backup.DEFAULT_MIN_FREE_GB}).", type="int", default=Backup.DEFAULT_MIN_FREE_GB)
+
 
     opts.add_option("-d", "--debug",            help="Enable debugging.", action="store_true", default=False)
 
