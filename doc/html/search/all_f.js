@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['warn_0',['warn',['../classpbackup_1_1backup_1_1UO.html#a50dc03524e8b1f8285f37262a70e4544',1,'pbackup::backup::UO']]]
+  ['version_0',['VERSION',['../namespacepbackup_1_1backup.html#a98d64750e268c1a7c5f3cac9492fc32e',1,'pbackup::backup']]]
 ];
