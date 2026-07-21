@@ -13,6 +13,8 @@ import  shutil
 import  datetime
 import  re
 
+VERSION = 4.3 # Keep this in sync with the pyproject.toml version.
+
 class BackupError(Exception):
     """@brief An exception raised during the backup process."""
     pass
@@ -694,9 +696,9 @@ class Backup(object):
                     exludePattern = exludePattern.replace(self._options.src, "")
                 # If exclude pattern does not contain a wildcard character.
                 if exludePattern.find("*") == -1:
-                    # Check that it's an existing file or folder.
+                    # Check that it's an existing file or folder if the src of the backup is local
                     fullPath = os.path.join(self._options.src, exludePattern)
-                    if not os.path.isdir(fullPath) and not os.path.isfile(fullPath):
+                    if self._options.ssh is None and not os.path.isdir(fullPath) and not os.path.isfile(fullPath):
                         raise Exception(f"Failed to exclude {fullPath} as path/file not found.")
 
                 cmd="{} --exclude {}".format(cmd, exludePattern)
@@ -950,7 +952,7 @@ class Backup(object):
 
 def main():
     uo = UO()
-
+    uo.info(f"Version: {VERSION}")
     opts=OptionParser(usage="\n\
      A command line backup tool that provides full and incremental backups using hard links\n\
      so that folders with a complete backup history are available using a minimum of storage space.\n\
